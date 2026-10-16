@@ -415,7 +415,7 @@ private fun DetailContent(
             }
         }
 
-        item { DividerLine(Modifier.padding(vertical = 14.dp)) }
+        item { DividerLine(modifier = Modifier.padding(vertical = 14.dp)) }
         item {
             Text(
                 "Published on Gothwad Store · ${Format.isoDate(app.updatedAt)}",
@@ -468,13 +468,14 @@ private fun HeaderSection(detail: AppDetailResponse, release: StoreRelease?, ins
                 .padding(top = 18.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            StatColumn("${Format.rating(app.ratingAvg)} ★", Format.reviews(app.ratingCount).replace(" ratings", ""))
+            StatColumn("${Format.rating(app.ratingAvg)} ★", Format.reviews(app.ratingCount).replace(" ratings", ""), modifier = Modifier.weight(1f))
             StatDivider()
-            StatColumn(Format.installs(app.downloadsCount), "Downloads")
+            StatColumn(Format.installs(app.downloadsCount), "Downloads", modifier = Modifier.weight(1f))
             StatDivider()
-            StatColumn(Format.bytes(release?.apkSizeBytes ?: 0), "Size")
+            StatColumn(Format.bytes(release?.apkSizeBytes ?: 0), "Size", modifier = Modifier.weight(1f))
             StatDivider()
             StatColumn(
+                modifier = Modifier.weight(1f),
                 release?.minSdk?.let { "API $it" } ?: "—",
                 "Min Android",
             )
@@ -483,9 +484,9 @@ private fun HeaderSection(detail: AppDetailResponse, release: StoreRelease?, ins
 }
 
 @Composable
-private fun StatColumn(value: String, label: String) {
+private fun StatColumn(value: String, label: String, modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier.weight(1f),
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {

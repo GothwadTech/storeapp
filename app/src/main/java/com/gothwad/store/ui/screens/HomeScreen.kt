@@ -154,11 +154,11 @@ private fun HomeContent(
                 contentPadding = PaddingValues(horizontal = Spacing.screenH, vertical = 14.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                item { PlayChip("For you", true) { } }
-                item { PlayChip("Top charts", false) { nav.navigate(Routes.charts("app")) } }
-                item { PlayChip("Games", false) { nav.navigate(Routes.GAMES) } }
-                item { PlayChip("Categories", false) { nav.navigate(Routes.CATEGORIES) } }
-                item { PlayChip("Updates", false) { nav.navigate(Routes.UPDATES) } }
+                item { PlayChip("For you", true, onClick = { }) }
+                item { PlayChip("Top charts", false, onClick = { nav.navigate(Routes.charts("app")) }) }
+                item { PlayChip("Games", false, onClick = { nav.navigate(Routes.GAMES) }) }
+                item { PlayChip("Categories", false, onClick = { nav.navigate(Routes.CATEGORIES) }) }
+                item { PlayChip("Updates", false, onClick = { nav.navigate(Routes.UPDATES) }) }
             }
         }
 

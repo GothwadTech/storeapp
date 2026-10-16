@@ -54,6 +54,7 @@ import com.gothwad.store.data.download.canInstall
 import com.gothwad.store.data.download.downloadedLabel
 import com.gothwad.store.data.download.isActive
 import com.gothwad.store.data.download.isFinished
+import com.gothwad.store.data.download.isInstalled
 import com.gothwad.store.data.download.needsRetry
 import com.gothwad.store.data.download.progress
 import com.gothwad.store.data.download.sizeLabel

@@ -82,15 +82,19 @@ fun AppsScreen(vm: StoreViewModel, nav: NavController) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(chips.indices.toList()) { index ->
-                    PlayChip(chips[index], chipIndex == index) {
-                        chipIndex = index
-                        when (index) {
-                            1 -> nav.navigate(Routes.charts("app"))
-                            2 -> nav.navigate(Routes.CATEGORIES)
-                            3 -> nav.navigate(Routes.UPDATES)
-                            else -> vm.refreshApps()
-                        }
-                    }
+                    PlayChip(
+                        label = chips[index],
+                        selected = chipIndex == index,
+                        onClick = {
+                            chipIndex = index
+                            when (index) {
+                                1 -> nav.navigate(Routes.charts("app"))
+                                2 -> nav.navigate(Routes.CATEGORIES)
+                                3 -> nav.navigate(Routes.UPDATES)
+                                else -> vm.refreshApps()
+                            }
+                        },
+                    )
                 }
             }
             when (val current = state) {

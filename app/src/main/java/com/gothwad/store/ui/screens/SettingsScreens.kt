@@ -39,6 +39,7 @@ import com.gothwad.store.core.Format
 import com.gothwad.store.data.settings.ChartTab
 import com.gothwad.store.data.settings.ListingLayout
 import com.gothwad.store.data.settings.ThemeMode
+import com.gothwad.store.ui.NetworkStatus
 import com.gothwad.store.ui.Routes
 import com.gothwad.store.ui.StoreEvent
 import com.gothwad.store.ui.StoreViewModel
@@ -405,7 +406,7 @@ fun NetworkScreen(vm: StoreViewModel, nav: NavController) {
     var reachable by rememberSaveable { mutableStateOf<Boolean?>(null) }
     var checking by rememberSaveable { mutableStateOf(false) }
     val current = settings
-    val status = rememberStub { vm.networkLabel() }
+    val status = NetworkStatus.networkLabel()
 
     GothwadScaffold(
         topBar = { SubScreenHeader(title = "Network & data", onBack = { nav.popBackStack() }) },
@@ -479,11 +480,6 @@ fun NetworkScreen(vm: StoreViewModel, nav: NavController) {
         }
     }
 }
-
-/** Tiny helper so `remember` keys are not required for a plain label. */
-@Composable
-private inline fun <T> rememberStub(crossinline block: () -> T): T =
-    androidx.compose.runtime.remember { block() }
 
 @Composable
 fun PrivacyScreen(vm: StoreViewModel, nav: NavController) {
@@ -615,7 +611,7 @@ fun AdvancedScreen(vm: StoreViewModel, nav: NavController) {
                         subtitle = "Permission, root and Shizuku",
                         onClick = {
                             AppGraph.installer.refreshCapabilities()
-                            AppGraph.installer.checkRoot()
+                            scope.launch { AppGraph.installer.checkRoot() }
                         },
                     )
                     SettingRow(

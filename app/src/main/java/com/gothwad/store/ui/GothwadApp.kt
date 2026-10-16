@@ -156,7 +156,7 @@ private fun EventPump(
                 appName = app?.name ?: task?.appName.orEmpty(),
                 versionLabel = app?.let { vm.releaseFor(it)?.versionName } ?: task?.versionName.orEmpty(),
                 sizeLabel = app?.let { vm.releaseFor(it)?.let { release -> Format.bytes(release.apkSizeBytes) } }
-                    ?: task?.sizeLabel.orEmpty(),
+                    ?: Format.bytes(task?.totalBytes ?: 0L),
                 selected = settings?.installMethod ?: InstallMethod.Session,
                 capabilities = capabilities,
                 onPick = { picked ->

@@ -116,7 +116,7 @@ fun SearchScreen(vm: StoreViewModel, nav: NavController) {
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 items(history) { term ->
-                                    PlayChip(term, false) { query = term }
+                                    PlayChip(term, false, onClick = { query = term })
                                 }
                             }
                         }

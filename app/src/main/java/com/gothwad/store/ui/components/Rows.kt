@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -500,7 +501,7 @@ fun EditorChoiceRow(
             Text(app.name, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 1)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    androidx.compose.material.icons.Icons.Filled.Star,
+                    Icons.Filled.Star,
                     contentDescription = null,
                     tint = GothwadTheme.extra.star,
                     modifier = Modifier.size(12.dp),

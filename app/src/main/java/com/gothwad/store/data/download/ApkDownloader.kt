@@ -73,7 +73,7 @@ class ApkDownloader(
             downloadedAt = 0,
             updatedAt = System.currentTimeMillis(),
         )
-        existing?.filePath?.takeIf { it.versionCode != release.versionCode }?.let { stale ->
+        existing?.takeIf { it.versionCode != release.versionCode }?.filePath?.let { stale ->
             runCatching { File(stale).delete() }
         }
         store.upsert(task)

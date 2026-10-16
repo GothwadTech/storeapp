@@ -24,6 +24,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -482,8 +484,8 @@ private fun Boolean.yesNoWord() = if (this) "Yes" else "No"
 fun RootScreen(vm: StoreViewModel, nav: NavController) {
     val capabilities by AppGraph.installer.capabilities.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
-    var lastLog by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
-    var probing by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    var lastLog by remember { mutableStateOf<String?>(null) }
+    var probing by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { AppGraph.installer.checkRoot() }
 
@@ -718,8 +720,10 @@ fun InstallHelpScreen(vm: StoreViewModel, nav: NavController) {
                         label = "Run a health check",
                         onClick = {
                             AppGraph.installer.refreshCapabilities()
-                            AppGraph.installer.checkRoot()
-                            vm.emit(StoreEvent.Message("Capabilities refreshed."))
+                            scope.launch {
+                                AppGraph.installer.checkRoot()
+                                vm.emit(StoreEvent.Message("Capabilities refreshed."))
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
                     )
