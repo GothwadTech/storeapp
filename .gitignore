@@ -16,3 +16,12 @@
 local.properties
 .env
 debug.keystore
+
+# Signing material and local Android SDK caches
+*.jks
+*.keystore
+/android-sdk/
+
+__pycache__/
+output_release/
+gradle.log

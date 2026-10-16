@@ -1,0 +1,44 @@
+name: Gothwad Store Quality Gate & Tests
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: store-quality-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    name: Unit tests, debug compile & Android lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+      - name: Install compile SDK
+        run: |
+          set -o pipefail
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36.1' 'build-tools;36.0.0' 2>&1 | tee sdk.log
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Unit tests, compile and lint
+        run: |
+          set -o pipefail
+          chmod +x ./gradlew
+          ./gradlew testDebugUnitTest assembleDebug lintDebug --no-daemon --continue --stacktrace 2>&1 | tee gradle.log
+      - name: Summarize failure
+        if: failure()
+        run: bash scripts/ci/summarize-gradle.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: quality-reports
+          path: |
+            gradle.log
+            sdk.log
+            app/build/reports/
+            app/build/test-results/

@@ -1,0 +1,131 @@
+name: Build Gothwad Store Signed APK & AAB
+
+on:
+  push:
+    branches: [main, arena/29a45334-storeapp]
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: 'Version name (blank = 1.0.run_number)'
+        type: string
+        default: ''
+      version_code:
+        description: 'Version code (blank = run_number; must exceed previously distributed version)'
+        type: string
+        default: ''
+      publish_release:
+        description: 'Publish a GitHub release (branch/test-key builds are prereleases)'
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      version_name:
+        type: string
+        default: ''
+      version_code:
+        type: string
+        default: ''
+      publish_release:
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+concurrency:
+  group: store-apk-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Test, Build & Sign Store APK & AAB
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+      - name: Install compile SDK and signing tools
+        run: |
+          set -o pipefail
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36.1' 'build-tools;36.0.0' 2>&1 | tee sdk.log
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+      - name: Determine version code and name
+        id: versioning
+        env:
+          VERSION_CODE: ${{ inputs.version_code }}
+          VERSION_NAME: ${{ inputs.version_name }}
+        run: bash scripts/ci/version.sh
+      - name: Check production Store API (read-only)
+        run: python3 scripts/ci/check-store-api.py
+      - name: Test, lint and build Release APK, Debug APK and AAB
+        env:
+          V_CODE: ${{ steps.versioning.outputs.v_code }}
+          V_NAME: ${{ steps.versioning.outputs.v_name }}
+        run: |
+          set -o pipefail
+          ./gradlew testDebugUnitTest lintDebug assembleRelease assembleDebug bundleRelease \
+            -PversionCode="$V_CODE" -PversionName="$V_NAME" --no-daemon --stacktrace 2>&1 | tee gradle.log
+      - name: Publish build failure in job summary
+        if: failure()
+        run: bash scripts/ci/summarize-gradle.sh
+      - name: Sign and verify APK & AAB
+        id: signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.KEY_PASSWORD }}
+          V_NAME: ${{ steps.versioning.outputs.v_name }}
+        run: bash scripts/ci/sign-android.sh
+      - name: Upload signed APK, Debug APK and AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: Gothwad-Store-v${{ steps.versioning.outputs.v_name }}-Build${{ steps.versioning.outputs.v_code }}
+          path: output_release/
+          if-no-files-found: error
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-reports-${{ github.run_id }}
+          path: |
+            gradle.log
+            sdk.log
+            app/build/reports/
+            app/build/test-results/
+          if-no-files-found: ignore
+      - name: Create automatic GitHub release
+        if: github.ref == 'refs/heads/main' || inputs.publish_release == true
+        uses: softprops/action-gh-release@v2
+        with:
+          target_commitish: ${{ github.sha }}
+          tag_name: v${{ steps.versioning.outputs.v_name }}
+          name: Gothwad Store v${{ steps.versioning.outputs.v_name }}
+          prerelease: ${{ steps.signing.outputs.permanent != 'true' || (github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/')) }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            output_release/*.apk
+            output_release/*.aab
+            output_release/SIGNING.txt
+            output_release/SHA256SUMS.txt
+      - name: Build summary
+        env:
+          PERMANENT: ${{ steps.signing.outputs.permanent }}
+        run: |
+          {
+            echo '## Gothwad Store artifacts'
+            echo 'Unit tests, lint, APK/AAB build and signature checks passed.'
+            echo "Permanent signing key: $PERMANENT"
+            echo 'A successful build is not a device/end-to-end or production-readiness certification.'
+            echo 'Native account login and authenticated actions are not yet implemented.'
+          } >> "$GITHUB_STEP_SUMMARY"
