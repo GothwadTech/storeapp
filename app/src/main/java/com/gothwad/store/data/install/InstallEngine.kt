@@ -3,7 +3,6 @@ package com.gothwad.store.data.install
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.annotation.RequiresApi
 import android.provider.Settings
 import com.gothwad.store.data.settings.Settings as AppSettings
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +12,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.util.concurrent.TimeUnit
 
 /**
  * Single entry point for every install/uninstall the UI or the download service
@@ -228,24 +226,3 @@ class InstallEngine(private val appContext: Context, private val apkDirProvider:
         runCatching { File(request.apkPath).delete() }
     }
 }
-
-/**
- * Waits for a spawned `su` helper without depending on API 26's
- * [Process.waitFor] overload; the APK still ships to API 24 devices.
- */
-private fun Process.awaitExit(seconds: Long): Boolean {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        return awaitExitOreo(seconds)
-    }
-    val exited = java.util.concurrent.CountDownLatch(1)
-    val watchdog = Thread {
-        runCatching { waitFor() }
-        exited.countDown()
-    }
-    watchdog.isDaemon = true
-    watchdog.start()
-    return exited.await(seconds, TimeUnit.SECONDS)
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-private fun Process.awaitExitOreo(seconds: Long): Boolean = waitFor(seconds, TimeUnit.SECONDS)

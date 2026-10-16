@@ -66,7 +66,7 @@ object PmInstall {
                 } else {
                     runCatching { process.outputStream.close() }
                 }
-                val finished = process.waitFor(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                val finished = process.awaitExit(TIMEOUT_SECONDS)
                 if (!finished) {
                     process.destroy()
                     return@withContext ShellResult(-1, output.toString(), "The root installer timed out.")
