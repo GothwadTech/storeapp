@@ -5,12 +5,13 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
+import kotlin.math.floor
 
 /** Formatting shared by every screen so numbers never look inconsistent. */
 object Format {
 
     fun bytes(value: Long): String {
-        if (value <= 0) return "—"
+        if (value < 0) return "—"
         val kb = 1024.0
         val units = listOf("B", "KB", "MB", "GB", "TB")
         var size = value.toDouble()
@@ -23,21 +24,25 @@ object Format {
         return String.format(Locale.US, "%.${decimals}f %s", size, units[unit])
     }
 
-    /** Play-style install counts: 1,234 · 12K+ · 1.2M+ · 1B+. */
+    /** Play-style install counts: 999 · 4.2K · 1.2M · 3B (truncated, not rounded). */
     fun installs(value: Long): String = when {
         value <= 0 -> "0"
         value < 1_000 -> value.toString()
-        value < 10_000 -> String.format(Locale.US, "%,d", value)
-        value < 1_000_000 -> "${value / 1_000}K+"
-        value < 1_000_000_000 -> {
-            val millions = value / 1_000_000.0
-            if (millions < 10) String.format(Locale.US, "%.1fM+", millions) else "${value / 1_000_000}M+"
-        }
-        else -> "${value / 1_000_000_000}B+"
+        value < 1_000_000 -> magnitude(value / 1_000.0, "K")
+        value < 1_000_000_000 -> magnitude(value / 1_000_000.0, "M")
+        else -> magnitude(value / 1_000_000_000.0, "B")
     }
 
+    /** `1.2K` under ten, `42K` above it — never rounds up past the real count. */
+    private fun magnitude(value: Double, suffix: String): String =
+        if (value < 10) {
+            String.format(Locale.US, "%.1f%s", floor(value * 10) / 10, suffix)
+        } else {
+            "${value.toLong()}$suffix"
+        }
+
     fun reviews(value: Int): String = when {
-        value <= 0 -> "No ratings yet"
+        value <= 0 -> "No ratings"
         value == 1 -> "1 rating"
         value < 10_000 -> String.format(Locale.US, "%,d ratings", value)
         else -> "${installs(value.toLong())} ratings"
@@ -89,21 +94,20 @@ object Format {
     fun speed(bytesPerSecond: Long): String = "${bytes(bytesPerSecond)}/s"
 
     fun eta(remainingBytes: Long, bytesPerSecond: Long): String {
-        if (bytesPerSecond <= 0 || remainingBytes <= 0) return ""
+        if (bytesPerSecond <= 0 || remainingBytes <= 0) return "—"
         val seconds = remainingBytes / bytesPerSecond
         return when {
-            seconds < 60 -> "${seconds}s left"
-            seconds < 3600 -> "${seconds / 60}m left"
-            else -> "${seconds / 3600}h left"
+            seconds < 60 -> "${seconds}s"
+            seconds < 3600 -> "${seconds / 60}m"
+            else -> "${seconds / 3600}h"
         }
     }
 
     /** "android.permission.CAMERA" -> "Camera" */
     fun permission(raw: String): String {
-        val short = raw.substringAfterLast('.')
-        return short.split('_').joinToString(" ") { part ->
-            part.lowercase().replaceFirstChar { it.uppercase() }
-        }
+        val short = raw.substringAfterLast('.').replace('_', ' ').trim()
+        if (short.isEmpty()) return "Unknown permission"
+        return short.lowercase().replaceFirstChar { it.uppercase() }
     }
 
     fun packageLabel(pkg: String): String = pkg.substringAfterLast('.').replaceFirstChar { it.uppercase() }

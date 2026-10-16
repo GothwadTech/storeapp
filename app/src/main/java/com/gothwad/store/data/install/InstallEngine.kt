@@ -71,7 +71,7 @@ class InstallEngine(private val appContext: Context, private val apkDirProvider:
         rootResult = withContext(Dispatchers.IO) {
             runCatching {
                 val process = ProcessBuilder("su", "-c", "id").redirectErrorStream(true).start()
-                if (!process.waitFor(6, TimeUnit.SECONDS)) {
+                if (!process.awaitExit(6)) {
                     process.destroy()
                     return@runCatching false
                 }
@@ -226,4 +226,22 @@ class InstallEngine(private val appContext: Context, private val apkDirProvider:
     fun deleteApk(request: InstallRequest) {
         runCatching { File(request.apkPath).delete() }
     }
+}
+
+/**
+ * Waits for a spawned `su` helper without depending on API 26's
+ * [Process.waitFor] overload; the APK still ships to API 24 devices.
+ */
+private fun Process.awaitExit(seconds: Long): Boolean {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        return waitFor(seconds, TimeUnit.SECONDS)
+    }
+    val exited = java.util.concurrent.CountDownLatch(1)
+    val watchdog = Thread {
+        runCatching { waitFor() }
+        exited.countDown()
+    }
+    watchdog.isDaemon = true
+    watchdog.start()
+    return exited.await(seconds, TimeUnit.SECONDS)
 }

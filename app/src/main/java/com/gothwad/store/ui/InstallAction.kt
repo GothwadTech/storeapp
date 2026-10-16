@@ -5,6 +5,7 @@ import com.gothwad.store.data.download.DownloadTask
 import com.gothwad.store.data.download.progress
 import com.gothwad.store.data.install.InstallPhase
 import com.gothwad.store.data.model.StoreRelease
+import kotlin.math.roundToInt
 
 /** What the round install button on a row/card should do right now. */
 sealed interface InstallAction {
@@ -23,7 +24,7 @@ sealed interface InstallAction {
             Install -> "Install"
             Update -> "Update"
             Open -> "Open"
-            is Downloading -> "${(progress * 100).toInt()}%"
+            is Downloading -> "${(progress * 100f).roundToInt()}%"
             is Paused -> "Resume"
             is Installing -> "Installing"
             Retry -> "Retry"
