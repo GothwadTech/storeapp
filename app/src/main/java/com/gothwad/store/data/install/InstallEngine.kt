@@ -3,6 +3,7 @@ package com.gothwad.store.data.install
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.annotation.RequiresApi
 import android.provider.Settings
 import com.gothwad.store.data.settings.Settings as AppSettings
 import kotlinx.coroutines.Dispatchers
@@ -234,7 +235,7 @@ class InstallEngine(private val appContext: Context, private val apkDirProvider:
  */
 private fun Process.awaitExit(seconds: Long): Boolean {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        return waitFor(seconds, TimeUnit.SECONDS)
+        return awaitExitOreo(seconds)
     }
     val exited = java.util.concurrent.CountDownLatch(1)
     val watchdog = Thread {
@@ -245,3 +246,6 @@ private fun Process.awaitExit(seconds: Long): Boolean {
     watchdog.start()
     return exited.await(seconds, TimeUnit.SECONDS)
 }
+
+@RequiresApi(Build.VERSION_CODES.O)
+private fun Process.awaitExitOreo(seconds: Long): Boolean = waitFor(seconds, TimeUnit.SECONDS)
