@@ -82,3 +82,4 @@ if log.exists():
 sdk = Path('sdk.log')
 if sdk.exists():
     emit('Gothwad Store sdk errors', sdk.read_text(errors='replace').splitlines()[-6:])
+PYTHON
