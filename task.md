@@ -534,3 +534,24 @@ Give me all polish code: animations, Coil config, caching layer, error states, o
 | 14 | | Final Polish + Offline + Branding |
 
 > **Usage:** Give each phase prompt to AI one by one starting from Phase 3.
+
+---
+
+## Backend-connected Android phase — 2026-10-16
+
+This section supersedes earlier demo-only completion claims for the runtime app.
+
+- [x] Inspect sibling `GothwadTech/store` Worker/API and integration conventions.
+- [x] Replace MainActivity's reachable demo flow with Worker-backed catalog,
+  app/game filters, categories, debounced search and app details/reviews.
+- [x] Explicit loading/error/retry/empty states; no silent fake-data fallback.
+- [x] Approved/live/minimum-SDK release selection and system APK downloads.
+- [x] Configurable HTTPS API base without client-side database secrets.
+- [x] Restore Gradle wrapper, use generated debug key, add contract/UI tests and CI.
+- [ ] Execute compile, tests, lint and APK build (sandbox has no Java/Android SDK).
+- [ ] Verify live API and downloads on devices, including API 24–28 permissions.
+- [ ] Native Accounts PKCE callback, secure session and authenticated actions.
+- [ ] Verified download/installer, installed/update state, account library and wishlist.
+- [ ] Production polish, accessibility, privacy/support links and release signing.
+
+Details and acceptance checklist: `docs/ANDROID_INTEGRATION.md`.

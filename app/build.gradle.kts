@@ -1,5 +1,3 @@
-import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
-
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.compose)
@@ -16,25 +14,35 @@ android {
     applicationId = "com.aistudio.gothwadstore.kzvqnp"
     minSdk = 24
     targetSdk = 36
-    versionCode = 1
-    versionName = "1.0"
+    val suppliedCode = providers.gradleProperty("versionCode").orElse("1").get()
+    versionCode = suppliedCode.toIntOrNull()?.also {
+      require(it in 1..2100000000) { "versionCode must be between 1 and 2100000000" }
+    } ?: error("versionCode must be an integer")
+    versionName = providers.gradleProperty("versionName").orElse("1.0").get().also {
+      require(it.matches(Regex("[0-9][0-9A-Za-z.+_-]{0,63}"))) { "Invalid versionName" }
+    }
+
+    val storeApiBaseUrl = providers.gradleProperty("STORE_API_BASE_URL")
+      .orElse("https://store.gothwadtech.com/api/").get()
+    require(storeApiBaseUrl.startsWith("https://") && storeApiBaseUrl.endsWith("/") &&
+      !storeApiBaseUrl.contains('"') && !storeApiBaseUrl.contains('\\')) {
+      "STORE_API_BASE_URL must be an HTTPS URL ending in /"
+    }
+    buildConfigField("String", "STORE_API_BASE_URL", "\"$storeApiBaseUrl\"")
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
   signingConfigs {
     create("release") {
-      val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
-      storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD")
-      keyAlias = "upload"
-      keyPassword = System.getenv("KEY_PASSWORD")
-    }
-    create("debugConfig") {
-      storeFile = file("${rootDir}/debug.keystore")
-      storePassword = "android"
-      keyAlias = "androiddebugkey"
-      keyPassword = "android"
+      // CI signs the unsigned outputs afterward, like GothwadTech/browser.
+      // Optional local signing still supports the original environment variables.
+      System.getenv("KEYSTORE_PATH")?.let { path ->
+        storeFile = file(path)
+        storePassword = System.getenv("KEYSTORE_PASSWORD") ?: System.getenv("STORE_PASSWORD")
+        keyAlias = System.getenv("KEY_ALIAS") ?: "upload"
+        keyPassword = System.getenv("KEY_PASSWORD")
+      }
     }
   }
 
@@ -43,9 +51,10 @@ android {
       isCrunchPngs = false
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-      signingConfig = signingConfigs.getByName("release")
+      signingConfig = if (System.getenv("KEYSTORE_PATH") != null)
+        signingConfigs.getByName("release") else null
     }
-    debug { signingConfig = signingConfigs.getByName("debugConfig") }
+    // Use Android's generated debug keystore; no repo-local key required.
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -122,6 +131,7 @@ dependencies {
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.junit)
   testImplementation(libs.junit)
+  testImplementation("com.squareup.okhttp3:mockwebserver:4.10.0")
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.robolectric)
   androidTestImplementation(platform(libs.androidx.compose.bom))
