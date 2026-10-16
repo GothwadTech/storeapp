@@ -126,6 +126,6 @@ jobs:
             echo '## Gothwad Store artifacts'
             echo 'Unit tests, lint, APK/AAB build and signature checks passed.'
             echo "Permanent signing key: $PERMANENT"
+            echo 'Gothwad Accounts sign-in (PKCE), library/wishlist/reviews and the install engine are wired to the live Worker.'
             echo 'A successful build is not a device/end-to-end or production-readiness certification.'
-            echo 'Native account login and authenticated actions are not yet implemented.'
           } >> "$GITHUB_STEP_SUMMARY"
