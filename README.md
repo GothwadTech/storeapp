@@ -43,9 +43,12 @@ no missing repository-local `debug.keystore` is required anymore. Release
 signing retains the existing `KEYSTORE_PATH`, `STORE_PASSWORD`, `KEY_PASSWORD`
 configuration and `upload` key alias. Do not commit signing keys.
 
-GitHub Actions runs unit tests, lint, and a debug build and uploads the APK and
-reports on push/PR. The workflow has been added, **not yet run or verified**.
-The current sandbox lacks Java/Android SDK and cannot produce a verified APK.
+GitHub Actions uses the sibling Browser repo's build/sign/release pattern,
+adapted to Store: unit tests, lint, production API smoke checks, Release/Debug
+APKs and AAB, signature checks, named artifacts and optional GitHub Releases.
+See [docs/BUILD_AND_RELEASE.md](docs/BUILD_AND_RELEASE.md) for signing secrets,
+version inputs and test-key limitations. The sandbox lacks Java/Android SDK;
+actual compile/test/signing verification happens in GitHub Actions.
 
 See [docs/ANDROID_INTEGRATION.md](docs/ANDROID_INTEGRATION.md) for the audited
 backend contract, device checks and next steps.

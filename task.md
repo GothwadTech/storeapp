@@ -555,3 +555,14 @@ This section supersedes earlier demo-only completion claims for the runtime app.
 - [ ] Production polish, accessibility, privacy/support links and release signing.
 
 Details and acceptance checklist: `docs/ANDROID_INTEGRATION.md`.
+
+### Browser-style workflow adaptation — 2026-10-16
+
+- [x] Inspect Browser's build_apk.yml, quality.yml, release.yml and Gradle signing.
+- [x] Add Store-named APK/AAB build, quality and reusable tag/manual release flow.
+- [x] Wire real version properties, post-build signing/verification, checksums,
+  permanent-key secrets and clearly labeled temporary-key test artifacts.
+- [x] Add read-only production API contract smoke check to APK workflow.
+- [x] Push working branch to trigger CI (no main merge or production release).
+- [ ] Confirm remote tests/lint/build/signing result and retrieve APK artifact.
+- [ ] Test on device and finish native authenticated feature parity.

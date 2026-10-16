@@ -79,7 +79,9 @@ removed the missing custom debug key requirement. Added Android CI.
 
 `git diff --check` passes. `./gradlew --version` cannot start: no Java installed.
 No Kotlin compilation, JVM tests, lint, device test or live production API check
-has completed in this sandbox. Network access is restricted to source/package
+has completed locally in this sandbox. Browser-style release and quality
+workflows now run these build checks remotely; see BUILD_AND_RELEASE.md and
+GitHub Actions for the actual run result. Network access is restricted to source/package
 hosts; do not interpret source inspection as verification of the deployed API.
 
 ### Required device / CI acceptance checks

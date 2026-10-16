@@ -38,7 +38,7 @@ concurrency:
 jobs:
   build:
     name: Test, Build & Sign Store APK & AAB
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
       - name: Checkout source code
@@ -50,10 +50,10 @@ jobs:
         with:
           java-version: '17'
           distribution: temurin
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
       - name: Install compile SDK and signing tools
-        run: sdkmanager 'platforms;android-36.1' 'build-tools;36.0.0'
+        run: |
+          set -o pipefail
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36.1' 'build-tools;36.0.0' 2>&1 | tee sdk.log
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
       - name: Make Gradle executable
@@ -99,6 +99,7 @@ jobs:
           name: android-reports-${{ github.run_id }}
           path: |
             gradle.log
+            sdk.log
             app/build/reports/
             app/build/test-results/
           if-no-files-found: ignore
