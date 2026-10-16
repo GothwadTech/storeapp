@@ -1,7 +1,7 @@
 package com.gothwad.store.data.model
 
 /**
- * Wire contract of the Gothwad Store Cloudflare Worker (`/api/store/*`).
+ * Wire contract of the Gothwad Store Cloudflare Worker (`/api/store/...`).
  * Field names mirror `worker/src/index.ts` exactly — do not rename casually,
  * the Android client eats the same JSON as the web storefront.
  */

@@ -167,6 +167,9 @@ fun InstallButton(
                 }
             }
         }
+    }
+}
+
 @Composable
 private fun RoundActionButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,

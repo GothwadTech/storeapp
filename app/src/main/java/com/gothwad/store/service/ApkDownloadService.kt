@@ -156,7 +156,7 @@ class ApkDownloadService : Service() {
                 throw IOException("The Store server answered ${response.code} for this APK.")
             }
             val body = response.body ?: throw IOException("The Store returned an empty APK response.")
-            val offset = if (response.code() == 206) existing else 0L
+            val offset = if (response.code == 206) existing else 0L
             val contentLength = body.contentLength()
             val total = when {
                 task.totalBytes > 0 -> task.totalBytes

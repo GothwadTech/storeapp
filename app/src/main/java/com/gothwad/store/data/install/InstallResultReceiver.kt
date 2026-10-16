@@ -42,7 +42,7 @@ class InstallResultReceiver : BroadcastReceiver() {
 
             PackageInstaller.STATUS_PENDING_USER_ACTION -> {
                 @Suppress("DEPRECATION")
-                val confirm = intent.getParcelableExtra<Intent>(PackageInstaller.EXTRA_INTENT)
+                val confirm = intent.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)
                 if (confirm == null) {
                     finish(
                         context, appId, appName, packageName, versionCode,
