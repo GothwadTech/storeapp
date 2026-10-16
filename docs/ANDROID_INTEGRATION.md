@@ -77,12 +77,13 @@ parsing, HTTP 404 propagation and safe compatible-release selection.
 Restored missing wrapper scripts/JAR from the official Gradle v9.3.1 tag and
 removed the missing custom debug key requirement. Added Android CI.
 
-`git diff --check` passes. `./gradlew --version` cannot start: no Java installed.
-No Kotlin compilation, JVM tests, lint, device test or live production API check
-has completed locally in this sandbox. Browser-style release and quality
-workflows now run these build checks remotely; see BUILD_AND_RELEASE.md and
-GitHub Actions for the actual run result. Network access is restricted to source/package
-hosts; do not interpret source inspection as verification of the deployed API.
+`git diff --check` passes. Local Gradle cannot start because no Java is installed.
+Remote GitHub Actions run **38869108860**, code commit `7074039`, passed the
+production API smoke check, JVM/Compose tests, lint, Release/Debug APK + AAB
+build, signing/signature verification and artifact upload. See BUILD_AND_RELEASE.md
+for the downloadable test artifacts. No device/end-to-end install test has run.
+Local network access is restricted to source/package hosts, so Azure-hosted
+artifact blobs cannot be downloaded into this sandbox.
 
 ### Required device / CI acceptance checks
 

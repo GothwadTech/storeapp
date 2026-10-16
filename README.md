@@ -52,3 +52,12 @@ actual compile/test/signing verification happens in GitHub Actions.
 
 See [docs/ANDROID_INTEGRATION.md](docs/ANDROID_INTEGRATION.md) for the audited
 backend contract, device checks and next steps.
+
+## Latest verified test APK
+
+[Download Gothwad Store v1.0.2 test build](https://github.com/GothwadTech/storeapp/actions/runs/38869108860/artifacts/12032164722)
+from the successful [CI run](https://github.com/GothwadTech/storeapp/actions/runs/38869108860).
+Unzip and install `GothwadStore-v1.0.2-TestRelease.apk` for testing. This build is
+signed with a temporary key, not an update-stable production key. Tests/lint/build
+and API/signature checks passed; device installation and full native account
+feature parity are not verified/complete yet.

@@ -93,3 +93,17 @@ account login, wishlist/library, review posting, checksum enforcement or update
 handling. Those native features are still outstanding; see
 `ANDROID_INTEGRATION.md`. A signed APK is not automatically web-feature-parity
 or production-ready.
+
+## Verified run — 2026-10-16
+
+[Run 38869108860](https://github.com/GothwadTech/storeapp/actions/runs/38869108860)
+completed successfully for code commit `7074039` on the Arena branch.
+Production API smoke check, unit/Compose tests, lint, Release/Debug APK and AAB
+build, APK signing/alignment verification, AAB signing verification and artifact
+upload all passed (6m23s). This is build/contract verification, not a device test.
+
+Download: [Gothwad-Store-v1.0.2-Build2](https://github.com/GothwadTech/storeapp/actions/runs/38869108860/artifacts/12032164722).
+It contains the signed **TestRelease** APK/AAB, Debug APK, SIGNING.txt and
+SHA256SUMS.txt. The permanent keystore was not configured in this run. Do not
+ship it as an update-stable production release. The sandbox cannot download
+Azure-hosted Actions artifact blobs; use the GitHub artifact link above.

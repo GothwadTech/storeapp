@@ -548,7 +548,7 @@ This section supersedes earlier demo-only completion claims for the runtime app.
 - [x] Approved/live/minimum-SDK release selection and system APK downloads.
 - [x] Configurable HTTPS API base without client-side database secrets.
 - [x] Restore Gradle wrapper, use generated debug key, add contract/UI tests and CI.
-- [ ] Execute compile, tests, lint and APK build (sandbox has no Java/Android SDK).
+- [x] Execute compile, tests, lint and APK build remotely in Actions run 38869108860.
 - [ ] Verify live API and downloads on devices, including API 24–28 permissions.
 - [ ] Native Accounts PKCE callback, secure session and authenticated actions.
 - [ ] Verified download/installer, installed/update state, account library and wishlist.
@@ -564,5 +564,11 @@ Details and acceptance checklist: `docs/ANDROID_INTEGRATION.md`.
   permanent-key secrets and clearly labeled temporary-key test artifacts.
 - [x] Add read-only production API contract smoke check to APK workflow.
 - [x] Push working branch to trigger CI (no main merge or production release).
-- [ ] Confirm remote tests/lint/build/signing result and retrieve APK artifact.
+- [x] Confirm remote tests/lint/build/signing: run 38869108860 passed; downloadable GitHub test-APK artifact linked in docs.
 - [ ] Test on device and finish native authenticated feature parity.
+
+
+Verified run: https://github.com/GothwadTech/storeapp/actions/runs/38869108860
+Artifact: https://github.com/GothwadTech/storeapp/actions/runs/38869108860/artifacts/12032164722
+Permanent signing key absent: outputs are TestRelease/Debug, not production-ready.
+No device install/end-to-end test has been performed.
