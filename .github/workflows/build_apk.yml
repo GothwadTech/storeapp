@@ -2,7 +2,7 @@ name: Build Gothwad Store Signed APK & AAB
 
 on:
   push:
-    branches: [main, arena/29a45334-storeapp]
+    branches: [main, arena/29a45334-storeapp, arena/8d337e13-storeapp]
   workflow_dispatch:
     inputs:
       version_name:

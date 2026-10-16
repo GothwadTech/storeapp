@@ -475,9 +475,9 @@ private fun HeaderSection(detail: AppDetailResponse, release: StoreRelease?, ins
             StatColumn(Format.bytes(release?.apkSizeBytes ?: 0), "Size", modifier = Modifier.weight(1f))
             StatDivider()
             StatColumn(
+                value = release?.minSdk?.let { "API $it" } ?: "—",
+                label = "Min Android",
                 modifier = Modifier.weight(1f),
-                release?.minSdk?.let { "API $it" } ?: "—",
-                "Min Android",
             )
         }
     }

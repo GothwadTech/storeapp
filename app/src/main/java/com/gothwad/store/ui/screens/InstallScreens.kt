@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -657,6 +658,7 @@ private fun CommandBlock(command: String) {
 @Composable
 fun InstallHelpScreen(vm: StoreViewModel, nav: NavController) {
     val capabilities by AppGraph.installer.capabilities.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
 
     GothwadScaffold(
         topBar = { SubScreenHeader(title = "Install help", onBack = { nav.popBackStack() }) },
