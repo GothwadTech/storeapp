@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Downloaded APKs live in app-private external storage: no runtime
+         storage permission is needed and the files disappear on uninstall. -->
+    <external-files-path name="apk" path="apk/" />
+    <files-path name="internal_apk" path="apk/" />
+    <cache-path name="cache" path="." />
+</paths>

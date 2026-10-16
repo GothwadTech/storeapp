@@ -3,11 +3,20 @@ plugins {
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.google.devtools.ksp)
   alias(libs.plugins.secrets)
-  // alias(libs.plugins.google.services)
 }
 
+// ── Deployment hosts ────────────────────────────────────────────────────────
+// Override with -PNAME=value. Nothing secret is ever stored here; the Android
+// client only talks to the public Worker API and the public Accounts endpoints.
+fun httpsProperty(name: String, fallback: String): String =
+  providers.gradleProperty(name).orElse(fallback).get().also {
+    require(it.startsWith("https://") && it.endsWith("/") && !it.contains('"') && !it.contains('\\')) {
+      "$name must be an HTTPS URL ending in /"
+    }
+  }
+
 android {
-  namespace = "com.example"
+  namespace = "com.gothwad.store"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
   defaultConfig {
@@ -22,13 +31,14 @@ android {
       require(it.matches(Regex("[0-9][0-9A-Za-z.+_-]{0,63}"))) { "Invalid versionName" }
     }
 
-    val storeApiBaseUrl = providers.gradleProperty("STORE_API_BASE_URL")
-      .orElse("https://store.gothwadtech.com/api/").get()
-    require(storeApiBaseUrl.startsWith("https://") && storeApiBaseUrl.endsWith("/") &&
-      !storeApiBaseUrl.contains('"') && !storeApiBaseUrl.contains('\\')) {
-      "STORE_API_BASE_URL must be an HTTPS URL ending in /"
-    }
-    buildConfigField("String", "STORE_API_BASE_URL", "\"$storeApiBaseUrl\"")
+    buildConfigField("String", "STORE_API_BASE_URL", "\"${httpsProperty("STORE_API_BASE_URL", "https://store.gothwadtech.com/api/")}\"")
+    buildConfigField("String", "CONSOLE_URL", "\"${httpsProperty("CONSOLE_URL", "https://console.gothwadtech.com/")}\"")
+    buildConfigField("String", "STORE_WEB_URL", "\"${httpsProperty("STORE_WEB_URL", "https://store.gothwadtech.com/")}\"")
+    buildConfigField("String", "ACCOUNTS_API_BASE_URL", "\"${httpsProperty("ACCOUNTS_API_BASE_URL", "https://accounts.gothwadtech.com/api/")}\"")
+    buildConfigField("String", "ACCOUNTS_SIGNIN_URL", "\"${httpsProperty("ACCOUNTS_SIGNIN_URL", "https://accounts.gothwadtech.com/")}\"")
+    buildConfigField("String", "SHIZUKU_DOWNLOAD_URL", "\"${httpsProperty("SHIZUKU_DOWNLOAD_URL", "https://shizuku.rikka.app/")}\"")
+    buildConfigField("String", "OAUTH_CLIENT_ID", "\"${providers.gradleProperty("OAUTH_CLIENT_ID").orElse("gothwad-store").get()}\"")
+    buildConfigField("String", "OAUTH_REDIRECT_URI", "\"gothwadstore://oauth/callback\"")
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -69,29 +79,23 @@ android {
     includeInApk = false
     includeInBundle = true
   }
+  lint {
+    // Shizuku/root/ADB install helpers are intentional; the app is distributed
+    // through GitHub releases, not Play, and every privileged path is opt-in.
+    disable += setOf("QueryAllPackagesPermission", "GoogleAppIndexingWarning")
+  }
 }
 
-// Configure the Secrets Gradle Plugin to use .env and .env.example files
-// to match the convention used in Web projects.
 secrets {
   propertiesFileName = ".env"
   defaultPropertiesFileName = ".env.example"
   ignoreList.add("FIREBASE_APPCHECK_DEBUG_TOKEN")
 }
 
-// googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.WARN }
-
-// Some unused dependencies are commented out below instead of being removed.
-// This makes it easy to add them back in the future if needed.
 dependencies {
   implementation(platform(libs.androidx.compose.bom))
-  // implementation(platform(libs.firebase.bom))
-  // implementation(libs.accompanist.permissions)
   implementation(libs.androidx.activity.compose)
-  // implementation(libs.androidx.camera.camera2)
-  // implementation(libs.androidx.camera.core)
-  // implementation(libs.androidx.camera.lifecycle)
-  // implementation(libs.androidx.camera.view)
+  implementation(libs.androidx.browser)
   implementation(libs.androidx.compose.material.icons.core)
   implementation(libs.androidx.compose.material.icons.extended)
   implementation(libs.androidx.compose.material3)
@@ -99,34 +103,22 @@ dependencies {
   implementation(libs.androidx.compose.ui.graphics)
   implementation(libs.androidx.compose.ui.tooling.preview)
   implementation(libs.androidx.core.ktx)
-  // implementation(libs.androidx.datastore.preferences)
+  implementation(libs.androidx.datastore.preferences)
   implementation(libs.androidx.lifecycle.runtime.compose)
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.lifecycle.viewmodel.compose)
   implementation(libs.androidx.navigation.compose)
-  implementation(libs.androidx.room.ktx)
-  implementation(libs.androidx.room.runtime)
   implementation(libs.coil.compose)
   implementation(libs.converter.moshi)
-  // implementation(libs.firebase.ai)
-  // Uncomment to use Firestore:
-  // implementation(libs.firebase.firestore)
-
-  // Uncomment ALL FOUR of the following dependencies together to use Firebase Auth and Google
-  // Sign-In via Credential Manager:
-  // implementation(libs.firebase.auth)
-  // implementation(libs.androidx.credentials)
-  // implementation(libs.androidx.credentials.play.services)
-  // implementation(libs.googleid)
-  // implementation(libs.firebase.appcheck.recaptcha)
-  // implementation(libs.firebase.appcheck.debug)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
-  implementation(libs.logging.interceptor)
   implementation(libs.moshi.kotlin)
   implementation(libs.okhttp)
-  // implementation(libs.play.services.location)
   implementation(libs.retrofit)
+  // Privileged install back-ends (opt-in): Shizuku / Sui.
+  implementation(libs.shizuku.api)
+  implementation(libs.shizuku.provider)
+
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.junit)
@@ -141,6 +133,4 @@ dependencies {
   androidTestImplementation(libs.androidx.runner)
   debugImplementation(libs.androidx.compose.ui.test.manifest)
   debugImplementation(libs.androidx.compose.ui.tooling)
-  "ksp"(libs.androidx.room.compiler)
-  "ksp"(libs.moshi.kotlin.codegen)
 }
