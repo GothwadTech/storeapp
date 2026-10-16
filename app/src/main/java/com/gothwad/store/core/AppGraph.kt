@@ -77,6 +77,9 @@ object AppGraph {
         return true
     }
 
+    /** Safe "is the graph built yet?" check for activities and receivers. */
+    val hasAuth: Boolean get() = ::auth.isInitialized
+
     fun requestNavigation(route: String, taskId: String? = null) {
         _navigationRequest.value = NavigationRequest(route, taskId, System.currentTimeMillis())
     }

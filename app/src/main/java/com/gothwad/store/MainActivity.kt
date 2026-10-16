@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
     private fun handleIntent(intent: Intent?) {
         if (intent == null) return
         val data: Uri? = intent.data
-        if (data != null && AppGraph::auth.isInitialized) {
+        if (data != null && AppGraph.hasAuth) {
             AppGraph.auth.handleRedirect(data)
         }
         intent.getStringExtra(EXTRA_ROUTE)?.let { route ->

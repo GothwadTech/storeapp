@@ -16,25 +16,39 @@ set -euo pipefail
 # interesting lines away.
 python3 - <<'PYTHON'
 import re
+from collections import OrderedDict
 from pathlib import Path
 
-INTERESTING = re.compile(
-    r'^\s*e: |^FAILURE:|Unresolved reference|What went wrong|^> Task .*FAILED'
-    r'|^Execution failed for task|tests? (completed|failed)|^error: |^Caused by: '
-)
+ERROR = re.compile(r'^\s*e: .*?/(app/src/[^:]+):(\d+):(\d+) (.*)$')
 
 def emit(title: str, lines: list[str]) -> None:
     if not lines:
         return
-    body = '\n'.join(lines[:25])
+    body = '\n'.join(lines[:40])
     body = body.replace('%', '%25').replace('\r', '').replace('\n', '%0A')
-    print(f'::error title={title}::{body[:6000]}')
+    print(f'::error title={title}::{body[:7000]}')
 
 log = Path('gradle.log')
 if log.exists():
-    hits = [line for line in log.read_text(errors='replace').splitlines() if INTERESTING.search(line)]
-    # Kotlin reports the same unresolved symbol repeatedly; keep the first hits.
-    emit('Gothwad Store gradle errors', hits)
+    text = log.read_text(errors='replace').splitlines()
+    errors = []
+    for line in text:
+        match = ERROR.match(line)
+        if match:
+            errors.append((match.group(1), match.group(2), match.group(3), match.group(4)))
+    digest = [f'{len(errors)} Kotlin error(s)']
+    per_file = OrderedDict()
+    for path, line_no, col, message in errors:
+        per_file.setdefault(path, []).append(f'{line_no}:{col} {message}')
+    for path, messages in per_file.items():
+        digest.append(path)
+        digest.extend('  ' + message for message in messages[:3])
+        if len(messages) > 3:
+            digest.append(f'  … {len(messages) - 3} more in this file')
+    emit('Gothwad Store Kotlin errors', digest)
+
+    other = [line for line in text if re.search(r'^\* What went wrong:|^Execution failed for task|^FAILURE:|error: ', line)]
+    emit('Gothwad Store gradle failure', other)
 
 sdk = Path('sdk.log')
 if sdk.exists():
