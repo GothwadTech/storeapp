@@ -99,7 +99,7 @@ class InstallEngine(private val appContext: Context, private val apkDirProvider:
         val builder = StringBuilder()
         val granted = runCatching {
             val process = ProcessBuilder("su", "-c", "id").redirectErrorStream(true).start()
-            val finished = process.waitFor(20, TimeUnit.SECONDS)
+            val finished = process.awaitExit(20)
             val output = process.inputStream.bufferedReader().use { it.readText() }.trim()
             builder.append("su -c id\n").append(output.ifBlank { "(no output)" })
             if (!finished) {
