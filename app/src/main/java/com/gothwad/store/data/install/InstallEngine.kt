@@ -101,7 +101,7 @@ class InstallEngine(private val appContext: Context, private val apkDirProvider:
             val output = process.inputStream.bufferedReader().use { it.readText() }.trim()
             builder.append("su -c id\n").append(output.ifBlank { "(no output)" })
             if (!finished) {
-                process.destroyForcibly()
+                process.terminate()
                 builder.append("\n\nexpected the command to finish within 20s")
                 false
             } else {

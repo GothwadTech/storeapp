@@ -27,3 +27,17 @@ internal fun Process.awaitExit(seconds: Long): Boolean {
 
 @RequiresApi(Build.VERSION_CODES.O)
 private fun Process.awaitExitOreo(seconds: Long): Boolean = waitFor(seconds, TimeUnit.SECONDS)
+
+/** Force-kills a helper that ignored its timeout, without API 26-only calls. */
+internal fun Process.terminate() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        terminateOreo()
+    } else {
+        runCatching { destroy() }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+private fun Process.terminateOreo() {
+    runCatching { destroyForcibly() }
+}
