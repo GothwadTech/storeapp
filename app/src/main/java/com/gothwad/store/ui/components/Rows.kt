@@ -250,7 +250,10 @@ fun AppRow(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                subtitle ?: buildMeta(app, release),
+                buildString {
+                    append(subtitle ?: buildMeta(app, release))
+                    if (app.source != "Gothwad Store") append(" · From ${app.source}")
+                },
                 fontSize = 12.sp,
                 color = GothwadTheme.extra.textSecondary,
                 maxLines = 1,
@@ -288,7 +291,10 @@ fun CompactAppRow(
         Column(Modifier.weight(1f)) {
             Text(app.name, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(
-                app.developerName.ifBlank { Format.packageLabel(app.packageName) },
+                buildString {
+                    append(app.developerName.ifBlank { Format.packageLabel(app.packageName) })
+                    if (app.source != "Gothwad Store") append(" · From ${app.source}")
+                },
                 fontSize = 11.sp,
                 color = GothwadTheme.extra.textSecondary,
                 maxLines = 1,

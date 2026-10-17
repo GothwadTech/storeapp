@@ -31,6 +31,8 @@ data class StoreApp(
     val featured: String? = null,
     val createdAt: String = "",
     val updatedAt: String = "",
+    /** Publisher/catalogue origin, shown as a compact attribution in the UI. */
+    val source: String = "Gothwad Store",
 ) {
     val isGame: Boolean get() = kind == "game"
     val hasRating: Boolean get() = ratingCount > 0
