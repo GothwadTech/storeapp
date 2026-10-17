@@ -30,6 +30,7 @@ import java.net.UnknownHostException
 class StoreRepository(
     private val api: StoreApi = StoreNetwork.api,
     private val sdkProvider: () -> Int = { android.os.Build.VERSION.SDK_INT },
+    private val fdroid: FdroidCatalog = FdroidCatalog(),
 ) {
 
     suspend fun catalog(kind: String?, category: String?, query: String): CatalogResponse {
@@ -38,7 +39,7 @@ class StoreRepository(
             if (trimmed.isNotEmpty()) api.search(trimmed, kind) else api.apps(kind, category)
         }
         assertConfigured(response.source)
-        return response.published()
+        return combine(response.published(), trimmed, kind, category)
     }
 
     suspend fun charts(kind: String?): CatalogResponse {
@@ -50,7 +51,7 @@ class StoreRepository(
     suspend fun home(kind: String?): CatalogResponse {
         val response = call { api.home(kind) }
         assertConfigured(response.source)
-        return response.published()
+        return combine(response.published(), "", null, null)
     }
 
     /**
@@ -66,6 +67,30 @@ class StoreRepository(
             }
             .groupBy { it.appId }
             .mapValues { (_, releases) -> releases.maxByOrNull { it.versionCode }!! }
+
+    private suspend fun combine(
+        gothwad: CatalogResponse,
+        query: String,
+        kind: String?,
+        category: String?,
+    ): CatalogResponse {
+        // The first-party catalogue remains usable if the optional upstream is unavailable.
+        val external = runCatching { fdroid.catalog() }.getOrNull() ?: return gothwad
+        val ownedPackages = gothwad.apps.mapTo(mutableSetOf()) { it.packageName }
+        val q = query.trim().lowercase()
+        val candidates = external.apps.filter { app ->
+            app.packageName !in ownedPackages &&
+                (kind.isNullOrBlank() || kind == "app" || kind == "both") &&
+                (category.isNullOrBlank() || app.category.equals(category, ignoreCase = true)) &&
+                (q.isEmpty() || app.name.contains(q, true) || app.packageName.contains(q, true) ||
+                    app.shortDesc.contains(q, true) || app.developerName.contains(q, true))
+        }
+        val ids = candidates.mapTo(mutableSetOf()) { it.id }
+        return gothwad.copy(
+            apps = gothwad.apps + candidates,
+            releases = gothwad.releases + external.releases.filter { it.appId in ids },
+        )
+    }
 
     private fun CatalogResponse.published(): CatalogResponse = copy(
         apps = apps.filter { it.status == "published" },
@@ -83,6 +108,10 @@ class StoreRepository(
     }
 
     suspend fun detail(id: String): AppDetailResponse {
+        if (id.startsWith("fdroid:")) {
+            return fdroid.find(id.removePrefix("fdroid:"))
+                ?: throw StoreException("This F-Droid app is no longer in its repository index.", StoreException.Kind.NOT_FOUND)
+        }
         val response = call { api.detail(id) }
         if (response.app.status != "published") throw StoreException(
             "This app is no longer available on Gothwad Store.",

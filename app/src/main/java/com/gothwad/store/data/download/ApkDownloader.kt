@@ -57,7 +57,8 @@ class ApkDownloader(
             iconUrl = app.iconUrl,
             versionName = release.versionName.ifBlank { release.versionCode.toString() },
             versionCode = release.versionCode,
-            url = StoreNetwork.downloadUrl(release.id),
+            // F-Droid APKs are fetched directly from the upstream repository, never proxied by Gothwad.
+            url = if (release.apkProvider == "fdroid") release.apkUrl else StoreNetwork.downloadUrl(release.id),
             fileName = fileName,
             totalBytes = release.apkSizeBytes,
             sha256 = release.apkSha256,

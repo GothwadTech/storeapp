@@ -7,6 +7,8 @@ The app never connects directly to Supabase and includes no backend credentials.
 ## Current implementation
 
 - Live published apps and games from the Worker, with category filters.
+- F-Droid's public repository index is merged into Home, Apps, and Search; Gothwad listings win when the same package is present in both sources. F-Droid metadata is cached in memory for six hours.
+- F-Droid APKs download directly from F-Droid through the existing foreground download/install flow; they are not proxied, hosted, or counted by Gothwad. A compact “From F-Droid” attribution is shown on list and detail screens.
 - Debounced server-side search, canceling superseded requests.
 - App details, screenshots, real ratings/reviews, developer replies, release
   notes, permissions and minimum-Android compatibility checks.

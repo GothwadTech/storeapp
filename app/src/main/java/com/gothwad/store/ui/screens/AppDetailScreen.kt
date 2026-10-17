@@ -448,6 +448,9 @@ private fun HeaderSection(detail: AppDetailResponse, release: StoreRelease?, ins
                     color = MaterialTheme.colorScheme.primary,
                     maxLines = 1,
                 )
+                if (app.source != "Gothwad Store") {
+                    Text("From ${app.source}", fontSize = 11.sp, color = GothwadTheme.extra.textSecondary)
+                }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (app.developerVerified == true) VerifiedBadge()
                     if (app.category.isNotBlank()) TagBadge(app.category.replaceFirstChar { it.uppercase() })
