@@ -73,6 +73,7 @@ import androidx.compose.ui.unit.sp
 import com.gothwad.store.R
 import com.gothwad.store.ui.Routes
 import com.gothwad.store.ui.theme.GothwadTheme
+import com.gothwad.store.ui.theme.PlayColors
 
 /**
  * Supplied by the nav host while a bottom-tab destination is on screen, so the
@@ -207,11 +208,15 @@ fun KiwiStoreTopBar(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Image(
-                painter = painterResource(R.mipmap.ic_launcher),
+                // Use the raster foreground layer, not ic_launcher: on Android 8+
+                // that resource resolves to an adaptive-icon XML, which Compose's
+                // painterResource cannot decode and would crash the first tab.
+                painter = painterResource(R.mipmap.ic_launcher_foreground),
                 contentDescription = "Kiwi Store",
                 modifier = Modifier
                     .size(28.dp)
                     .clip(RoundedCornerShape(8.dp))
+                    .background(PlayColors.Brand)
                     .clickable(onClick = onLogo),
             )
             Row(
