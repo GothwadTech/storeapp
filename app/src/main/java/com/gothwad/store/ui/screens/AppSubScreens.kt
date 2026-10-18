@@ -291,7 +291,7 @@ fun AppInfoScreen(vm: StoreViewModel, nav: NavController, appId: String) {
             item {
                 Box(Modifier.padding(top = 12.dp)) {
                     Text(
-                        "The SHA-256 above is the publisher's checksum. Gothwad Store verifies every " +
+                        "The SHA-256 above is the publisher's checksum. Kiwi Store verifies every " +
                             "download against it before installing (see Download settings).",
                         fontSize = 12.sp,
                         color = GothwadTheme.extra.textTertiary,

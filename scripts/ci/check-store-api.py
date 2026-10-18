@@ -8,7 +8,7 @@ import urllib.request
 BASE = 'https://store.gothwadtech.com/api/'
 
 def read(path):
-    req = urllib.request.Request(BASE + path, headers={'Accept': 'application/json', 'User-Agent': 'GothwadStore-CI/1.0'})
+    req = urllib.request.Request(BASE + path, headers={'Accept': 'application/json', 'User-Agent': 'KiwiStore-CI/1.0'})
     with urllib.request.urlopen(req, timeout=30) as response:
         if 'application/json' not in response.headers.get('Content-Type', ''):
             raise ValueError('Store route returned HTML/non-JSON instead of Worker JSON: ' + path)

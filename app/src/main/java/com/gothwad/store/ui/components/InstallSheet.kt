@@ -38,7 +38,7 @@ import com.gothwad.store.data.install.InstallerAvailability
 import com.gothwad.store.ui.theme.GothwadTheme
 
 /**
- * The "how should Gothwad Store install this?" sheet. Shown when the user picked
+ * The "how should Kiwi Store install this?" sheet. Shown when the user picked
  * the Ask method, when a notification asks for an install, or from downloads.
  */
 @Composable
@@ -122,7 +122,7 @@ fun InstallMethodSheet(
                     InfoBanner(
                         title = "Verified before installing",
                         message = "The APK is hashed with SHA-256 and compared with the publisher's checksum. " +
-                            "Gothwad Store deletes the file and stops if the two differ.",
+                            "Kiwi Store deletes the file and stops if the two differ.",
                     )
                     Spacer(Modifier.height(10.dp))
                     OutlineButton("Cancel install", onClick = onDismiss, modifier = Modifier.fillMaxWidth())

@@ -150,7 +150,7 @@ object PmInstall {
                     "Enable “Allow downgrade” in Download settings and try again."
             code.contains("UPDATE_INCOMPATIBLE") ->
                 "This build is signed with a different key than the installed $packageName. " +
-                    "Uninstall the installed copy first, then install it again from Gothwad Store."
+                    "Uninstall the installed copy first, then install it again from Kiwi Store."
             code.contains("ALREADY_EXISTS") ->
                 "$packageName is already installed. Uninstall it and try again."
             code.contains("INSUFFICIENT_STORAGE") ->
@@ -163,7 +163,7 @@ object PmInstall {
             code.contains("PARSE_FAILED") ->
                 "The APK looks damaged. Delete the download and download it again."
             code.contains("USER_RESTRICTED") ->
-                "Android blocked this install. Allow installs from Gothwad Store in Settings."
+                "Android blocked this install. Allow installs from Kiwi Store in Settings."
             code.contains("TEST_ONLY") -> "This build is a test-only build." 
             code.contains("INVALID_APK") -> "The APK is not valid for this Android version."
             else -> raw.ifBlank { "The install failed." }
@@ -174,7 +174,7 @@ object PmInstall {
         raw.contains("UPDATE_INCOMPATIBLE", true) ->
             "Tip: the Shizuku/root installer can replace apps signed with the platform key, but not apps signed with a different developer key."
         raw.contains("USER_RESTRICTED", true) ->
-            "Open Settings → Apps → Gothwad Store → Install unknown apps and allow it."
+            "Open Settings → Apps → Kiwi Store → Install unknown apps and allow it."
         raw.contains("VERIFICATION_FAILURE", true) ->
             "Settings → Security → Google Play Protect → turn off scanning temporarily."
         else -> null

@@ -1,4 +1,4 @@
-name: Release Gothwad Store to GitHub Releases
+name: Release Kiwi Store to GitHub Releases
 on:
   push:
     tags: ['v*']

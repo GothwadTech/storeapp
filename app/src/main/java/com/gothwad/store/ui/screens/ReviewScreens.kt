@@ -281,7 +281,7 @@ fun ReportAppScreen(vm: StoreViewModel, nav: NavController, appId: String) {
         ) {
             item {
                 InfoBanner(
-                    title = "Reports go to the Gothwad Store team",
+                    title = "Reports go to the Kiwi Store team",
                     message = "Every report is stored with your account so reviewers can follow up. " +
                         "The app stays available until a reviewer decides.",
                 )

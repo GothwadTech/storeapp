@@ -3,7 +3,7 @@ package com.gothwad.store.data.install
 import android.os.Build
 
 /**
- * How Gothwad Store is allowed to hand an APK to Android.
+ * How Kiwi Store is allowed to hand an APK to Android.
  *
  *  · [Session]  – PackageInstaller session. Play-Store-like in-app progress,
  *                 Android still shows its own confirmation dialog.

@@ -3,18 +3,18 @@
 Adapted from `GothwadTech/browser/.github/workflows/{build_apk,quality,release}.yml`.
 The same Android flow is retained: JDK 17 → automatic/manual version → Release
 APK + Debug APK + AAB → signing and verification → artifacts → GitHub Release.
-Names are `GothwadStore-*` / `Gothwad-Store-*`, not `GothwadTVBrowser-*`.
+Names are `KiwiStore-*` / `Gothwad-Store-*`, not `GothwadTVBrowser-*`.
 Browser-only Linux/Windows/macOS package scripts are intentionally not copied.
 
 ## Workflows
 
-- **Build Gothwad Store Signed APK & AAB** (`build_apk.yml`): runs on `main` and
+- **Build Kiwi Store Signed APK & AAB** (`build_apk.yml`): runs on `main` and
   the Arena working branch, or manually. Includes a read-only production Worker
   API smoke check, JVM/UI tests, lint, APK/AAB build, APK signature/alignment
   verification and AAB signature verification. Downloads are not triggered by CI.
-- **Gothwad Store Quality Gate & Tests** (`quality.yml`): PRs, main pushes and
+- **Kiwi Store Quality Gate & Tests** (`quality.yml`): PRs, main pushes and
   manual runs; tests/debug compile/lint. Lint failures are not ignored.
-- **Release Gothwad Store to GitHub Releases** (`release.yml`): `v*` tags or
+- **Release Kiwi Store to GitHub Releases** (`release.yml`): `v*` tags or
   manual run. Calls the same build workflow instead of duplicating signing code.
 
 GitHub automatically creates the normal `GITHUB_TOKEN`; do not add a PAT.
@@ -51,9 +51,9 @@ fails the job; it does not silently fall back to another identity.
 
 Artifact: `Gothwad-Store-v<version>-Build<code>`
 
-- `GothwadStore-v<version>-Release.apk` with permanent key; otherwise
-  `GothwadStore-v<version>-TestRelease.apk`.
-- `GothwadStore-v<version>-Debug.apk` (development/testing only).
+- `KiwiStore-v<version>-Release.apk` with permanent key; otherwise
+  `KiwiStore-v<version>-TestRelease.apk`.
+- `KiwiStore-v<version>-Debug.apk` (development/testing only).
 - Matching signed `Release.aab` / `TestRelease.aab`. AAB is an upload bundle,
   **not directly installable** and does not imply Play Store approval.
 - `SHA256SUMS.txt` and `SIGNING.txt`.

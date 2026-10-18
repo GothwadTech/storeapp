@@ -138,7 +138,7 @@ fun SearchScreen(vm: StoreViewModel, nav: NavController) {
                     } else {
                         item {
                             EmptyState(
-                                title = "Search Gothwad Store",
+                                title = "Search Kiwi Store",
                                 message = "Find apps and games by name, developer or package name.",
                                 icon = Icons.Filled.Search,
                             )

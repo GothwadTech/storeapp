@@ -185,7 +185,7 @@ fun DeveloperConsoleScreen(vm: StoreViewModel, nav: NavController) {
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Opens in your browser. Gothwad Store does not embed the console.",
+                        "Opens in your browser. Kiwi Store does not embed the console.",
                         fontSize = 12.sp,
                         color = GothwadTheme.extra.textTertiary,
                     )
@@ -200,7 +200,7 @@ fun AboutScreen(vm: StoreViewModel, nav: NavController) {
     val context = LocalContext.current
 
     GothwadScaffold(
-        topBar = { SubScreenHeader(title = "About Gothwad Store", onBack = { nav.popBackStack() }) },
+        topBar = { SubScreenHeader(title = "About Kiwi Store", onBack = { nav.popBackStack() }) },
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
@@ -209,16 +209,16 @@ fun AboutScreen(vm: StoreViewModel, nav: NavController) {
             item {
                 Column(Modifier.padding(Spacing.screenH)) {
                     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                        BrandAvatar(text = "GS", size = 54.dp)
+                        BrandAvatar(text = "KS", size = 54.dp)
                         Column {
-                            Text("Gothwad Store", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                            Text("Kiwi Store", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                             Text(
                                 "Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
                                 fontSize = 12.sp,
                                 color = GothwadTheme.extra.textSecondary,
                             )
                             Text(
-                                "An open Android app store for Gothwad projects",
+                                "Managed by Gothwad Tech & Dark Root",
                                 fontSize = 12.sp,
                                 color = GothwadTheme.extra.textTertiary,
                             )
@@ -279,7 +279,7 @@ fun AboutScreen(vm: StoreViewModel, nav: NavController) {
                 Column(Modifier.padding(Spacing.screenH)) {
                     Spacer(Modifier.height(12.dp))
                     Text(
-                        "Built by Gothwad Tech. Not affiliated with Google; Google Play is a trademark of " +
+                        "Managed by Gothwad Tech & Dark Root. Not affiliated with Google; Google Play is a trademark of " +
                             "Google LLC.",
                         fontSize = 11.sp,
                         color = GothwadTheme.extra.textTertiary,
@@ -350,7 +350,7 @@ fun LicensesScreen(vm: StoreViewModel, nav: NavController) {
             item {
                 InfoBanner(
                     title = "Apache 2.0 and friends",
-                    message = "Gothwad Store builds on the Android Open Source Project and the libraries below. " +
+                    message = "Kiwi Store builds on the Android Open Source Project and the libraries below. " +
                         "Full texts ship with the APK on the store page.",
                 )
             }
@@ -406,7 +406,7 @@ fun HelpScreen(vm: StoreViewModel, nav: NavController) {
                 SettingsGroup {
                     SettingRow(
                         title = "Installs fail with “blocked”",
-                        subtitle = "Allow Gothwad Store to install unknown apps",
+                        subtitle = "Allow Kiwi Store to install unknown apps",
                         onClick = { nav.navigate(Routes.INSTALL_PERMISSION) },
                     )
                     SettingRow(
@@ -492,7 +492,7 @@ fun FeedbackScreen(vm: StoreViewModel, nav: NavController) {
     var sent by rememberSaveable { mutableStateOf(false) }
 
     val diagnostics = buildString {
-        appendLine("app=Gothwad Store ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+        appendLine("app=Kiwi Store ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
         appendLine("android=${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})")
         appendLine("device=${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}")
         appendLine("abi=${android.os.Build.SUPPORTED_ABIS.joinToString(",")}")
@@ -550,7 +550,7 @@ fun FeedbackScreen(vm: StoreViewModel, nav: NavController) {
                         val body = if (includeDiagnostics) "$message\n\n---\n$diagnostics" else message
                         val intent = android.content.Intent(android.content.Intent.ACTION_SENDTO).apply {
                             data = android.net.Uri.parse("mailto:support@gothwadtech.com")
-                            putExtra(android.content.Intent.EXTRA_SUBJECT, "Gothwad Store feedback (${BuildConfig.VERSION_NAME})")
+                            putExtra(android.content.Intent.EXTRA_SUBJECT, "Kiwi Store feedback (${BuildConfig.VERSION_NAME})")
                             putExtra(android.content.Intent.EXTRA_TEXT, body)
                         }
                         val ok = runCatching {
@@ -572,7 +572,7 @@ fun FeedbackScreen(vm: StoreViewModel, nav: NavController) {
                         val clipboard = context.getSystemService(android.content.ClipboardManager::class.java)
                         clipboard?.setPrimaryClip(
                             android.content.ClipData.newPlainText(
-                                "Gothwad Store feedback",
+                                "Kiwi Store feedback",
                                 if (includeDiagnostics) "$message\n\n---\n$diagnostics" else message,
                             ),
                         )
@@ -610,7 +610,7 @@ fun WelcomeScreen(vm: StoreViewModel, nav: NavController) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     BrandAvatar(text = "GS", size = 64.dp)
                     Text(
-                        "Welcome to Gothwad Store",
+                        "Welcome to Kiwi Store",
                         fontSize = 26.sp,
                         fontWeight = FontWeight.Bold,
                         color = GothwadTheme.extra.textPrimary,
@@ -627,7 +627,7 @@ fun WelcomeScreen(vm: StoreViewModel, nav: NavController) {
             item {
                 Spacer(Modifier.height(22.dp))
                 SettingsGroup(title = "Three things to set up") {
-                    IconTextRow(Icons.Filled.Security, "Allow Gothwad Store to install unknown apps (or connect Shizuku).")
+                    IconTextRow(Icons.Filled.Security, "Allow Kiwi Store to install unknown apps (or connect Shizuku).")
                     IconTextRow(Icons.Filled.Email, "Sign in with Gothwad so your library follows your account.")
                     IconTextRow(Icons.Filled.Storefront, "Pick an installer method — session, Shizuku, root or ADB.")
                 }

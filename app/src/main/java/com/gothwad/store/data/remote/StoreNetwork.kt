@@ -46,7 +46,7 @@ object StoreNetwork {
         val token = tokenProvider()
         val request = chain.request().newBuilder()
             .header("Accept", "application/json")
-            .header("User-Agent", "GothwadStore-Android/${BuildConfig.VERSION_NAME}")
+            .header("User-Agent", "KiwiStore-Android/${BuildConfig.VERSION_NAME}")
             .apply { if (!token.isNullOrBlank()) header("Authorization", "Bearer $token") }
             .build()
         chain.proceed(request)

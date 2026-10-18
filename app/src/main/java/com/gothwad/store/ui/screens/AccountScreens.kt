@@ -247,7 +247,7 @@ fun AccountScreen(vm: StoreViewModel, nav: NavController) {
                 )
                 SettingRow(
                     title = "Privacy",
-                    subtitle = "What Gothwad Store collects and stores",
+                    subtitle = "What Kiwi Store collects and stores",
                     icon = Icons.Filled.PrivacyTip,
                     onClick = { nav.navigate(Routes.PRIVACY) },
                 )
@@ -282,7 +282,7 @@ fun AccountScreen(vm: StoreViewModel, nav: NavController) {
                     onClick = { nav.navigate(Routes.FEEDBACK) },
                 )
                 SettingRow(
-                    title = "About Gothwad Store",
+                    title = "About Kiwi Store",
                     subtitle = "Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
                     icon = Icons.Filled.Info,
                     onClick = { nav.navigate(Routes.ABOUT) },
@@ -313,7 +313,7 @@ fun AccountScreen(vm: StoreViewModel, nav: NavController) {
                     )
                     Spacer(Modifier.height(14.dp))
                     Text(
-                        "Gothwad Store ${BuildConfig.VERSION_NAME} · signed in as ${user.username.ifBlank { user.id }}",
+                        "Kiwi Store ${BuildConfig.VERSION_NAME} · signed in as ${user.username.ifBlank { user.id }}",
                         fontSize = 11.sp,
                         color = GothwadTheme.extra.textTertiary,
                     )
@@ -478,7 +478,7 @@ fun SignInScreen(vm: StoreViewModel, nav: NavController) {
                 SettingsGroup {
                     com.gothwad.store.ui.components.IconTextRow(
                         Icons.Filled.Lock,
-                        "Gothwad Store opens the Accounts consent page in a Custom Tab with PKCE " +
+                        "Kiwi Store opens the Accounts consent page in a Custom Tab with PKCE " +
                             "(no client secret is stored in the APK).",
                     )
                     com.gothwad.store.ui.components.IconTextRow(
@@ -531,7 +531,7 @@ fun AccountDetailsScreen(vm: StoreViewModel, nav: NavController) {
                 item {
                     InfoBanner(
                         title = "Not signed in",
-                        message = "Gothwad Store keeps your library on this device only until you sign in.",
+                        message = "Kiwi Store keeps your library on this device only until you sign in.",
                         tone = BannerTone.Warning,
                         action = { PrimaryButton("Sign in", onClick = { nav.navigate(Routes.SIGN_IN) }) },
                     )
@@ -679,7 +679,7 @@ fun AccountSecurityScreen(vm: StoreViewModel, nav: NavController) {
             item { SectionHeader(title = "Good practice") }
             item {
                 SettingsGroup {
-                    com.gothwad.store.ui.components.IconTextRow(Icons.Filled.Lock, "Use a password manager; Gothwad Store never sees your password.")
+                    com.gothwad.store.ui.components.IconTextRow(Icons.Filled.Lock, "Use a password manager; Kiwi Store never sees your password.")
                     com.gothwad.store.ui.components.IconTextRow(Icons.Filled.ManageAccounts, "Revoke access for devices you no longer use from accounts.gothwadtech.com.")
                     com.gothwad.store.ui.components.IconTextRow(Icons.Filled.PrivacyTip, "Public Wi-Fi cannot read the tokens — everything goes over TLS and PKCE keeps the code single-use.")
                 }

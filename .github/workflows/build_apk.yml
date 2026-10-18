@@ -1,4 +1,4 @@
-name: Build Gothwad Store Signed APK & AAB
+name: Build Kiwi Store Signed APK & AAB
 
 on:
   push:
@@ -109,7 +109,7 @@ jobs:
         with:
           target_commitish: ${{ github.sha }}
           tag_name: v${{ steps.versioning.outputs.v_name }}
-          name: Gothwad Store v${{ steps.versioning.outputs.v_name }}
+          name: Kiwi Store v${{ steps.versioning.outputs.v_name }}
           prerelease: ${{ steps.signing.outputs.permanent != 'true' || (github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/')) }}
           generate_release_notes: true
           fail_on_unmatched_files: true
@@ -123,7 +123,7 @@ jobs:
           PERMANENT: ${{ steps.signing.outputs.permanent }}
         run: |
           {
-            echo '## Gothwad Store artifacts'
+            echo '## Kiwi Store artifacts'
             echo 'Unit tests, lint, APK/AAB build and signature checks passed.'
             echo "Permanent signing key: $PERMANENT"
             echo 'Gothwad Accounts sign-in (PKCE), library/wishlist/reviews and the install engine are wired to the live Worker.'

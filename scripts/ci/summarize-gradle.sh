@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 {
-  echo '## Gothwad Store build diagnostics'
+  echo '## Kiwi Store build diagnostics'
   echo '```text'
   if [[ -f gradle.log ]]; then
     grep -E -A 8 '^e:|^FAILURE:|^\* What went wrong:|^Execution failed|^.*error:|^> Task .*FAILED|^.*tests completed' gradle.log | head -160 || true
@@ -50,7 +50,7 @@ if log.exists():
     for path, messages in per_file.items():
         digest.append(path)
         digest.extend('  ' + message for message in messages[:4])
-    emit('Gothwad Store Kotlin errors', digest)
+    emit('Kiwi Store Kotlin errors', digest)
 
     failures = []
     index = 0
@@ -64,7 +64,7 @@ if log.exists():
                 else:
                     break
         index += 1
-    emit('Gothwad Store unit test failures', [f'{len(failures)} detail line(s)'] + failures)
+    emit('Kiwi Store unit test failures', [f'{len(failures)} detail line(s)'] + failures)
 
     lint = []
     totals = ''
@@ -74,12 +74,12 @@ if log.exists():
             lint.append(f'{issue.group(1).split("/app/")[-1]}:{issue.group(2)} {issue.group(3)}: {issue.group(4)}')
         elif LINT_TOTAL.match(line):
             totals = line
-    emit('Gothwad Store lint issues', ([totals] if totals else []) + lint)
+    emit('Kiwi Store lint issues', ([totals] if totals else []) + lint)
 
     other = [line for line in text if re.search(r'^\* What went wrong:|^Execution failed for task|^FAILURE: ', line)]
-    emit('Gothwad Store gradle failure', other)
+    emit('Kiwi Store gradle failure', other)
 
 sdk = Path('sdk.log')
 if sdk.exists():
-    emit('Gothwad Store sdk errors', sdk.read_text(errors='replace').splitlines()[-6:])
+    emit('Kiwi Store sdk errors', sdk.read_text(errors='replace').splitlines()[-6:])
 PYTHON

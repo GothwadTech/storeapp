@@ -39,7 +39,7 @@ else
   keytool -genkeypair -noprompt -keystore "$KS_PATH" -storetype JKS \
     -storepass:env KEYSTORE_PASS -keypass:env KEY_PASS -alias "$KEY_ALIAS" \
     -keyalg RSA -keysize 2048 -validity 10000 \
-    -dname 'CN=Gothwad Store CI Test, O=Gothwad Tech, C=IN' >/dev/null 2>&1
+    -dname 'CN=Kiwi Store CI Test, O=Gothwad Tech, C=IN' >/dev/null 2>&1
   BUILD_KIND=TestRelease
   echo 'permanent=false' >> "$GITHUB_OUTPUT"
   echo '::warning::No permanent release key configured. TestRelease only; future builds cannot update this install without uninstalling.'
@@ -57,17 +57,17 @@ done
 "$BUILD_TOOLS/zipalign" -f -P 16 4 "$APK" "$ALIGNED"
 "$BUILD_TOOLS/apksigner" sign --ks "$KS_PATH" --ks-key-alias "$KEY_ALIAS" \
   --ks-pass env:KEYSTORE_PASS --key-pass env:KEY_PASS \
-  --out "output_release/GothwadStore-v${V_NAME}-${BUILD_KIND}.apk" "$ALIGNED"
-"$BUILD_TOOLS/apksigner" verify --verbose --print-certs "output_release/GothwadStore-v${V_NAME}-${BUILD_KIND}.apk"
-"$BUILD_TOOLS/zipalign" -c -P 16 4 "output_release/GothwadStore-v${V_NAME}-${BUILD_KIND}.apk"
-cp "$DEBUG_APK" "output_release/GothwadStore-v${V_NAME}-Debug.apk"
-"$BUILD_TOOLS/apksigner" verify "output_release/GothwadStore-v${V_NAME}-Debug.apk"
-cp "$AAB" "output_release/GothwadStore-v${V_NAME}-${BUILD_KIND}.aab"
+  --out "output_release/KiwiStore-v${V_NAME}-${BUILD_KIND}.apk" "$ALIGNED"
+"$BUILD_TOOLS/apksigner" verify --verbose --print-certs "output_release/KiwiStore-v${V_NAME}-${BUILD_KIND}.apk"
+"$BUILD_TOOLS/zipalign" -c -P 16 4 "output_release/KiwiStore-v${V_NAME}-${BUILD_KIND}.apk"
+cp "$DEBUG_APK" "output_release/KiwiStore-v${V_NAME}-Debug.apk"
+"$BUILD_TOOLS/apksigner" verify "output_release/KiwiStore-v${V_NAME}-Debug.apk"
+cp "$AAB" "output_release/KiwiStore-v${V_NAME}-${BUILD_KIND}.aab"
 jarsigner -keystore "$KS_PATH" -storepass:env KEYSTORE_PASS -keypass:env KEY_PASS \
   -sigalg SHA256withRSA -digestalg SHA-256 \
-  "output_release/GothwadStore-v${V_NAME}-${BUILD_KIND}.aab" "$KEY_ALIAS"
+  "output_release/KiwiStore-v${V_NAME}-${BUILD_KIND}.aab" "$KEY_ALIAS"
 # A newly created key is self-signed, so trust-chain warnings are expected.
 # Validate signature/digest and assert the manifest is actually signed.
-jarsigner -verify "output_release/GothwadStore-v${V_NAME}-${BUILD_KIND}.aab" > "$RUNNER_TEMP/store-aab-verification.txt"
+jarsigner -verify "output_release/KiwiStore-v${V_NAME}-${BUILD_KIND}.aab" > "$RUNNER_TEMP/store-aab-verification.txt"
 grep -q 'jar verified' "$RUNNER_TEMP/store-aab-verification.txt"
 (cd output_release && sha256sum ./*.apk ./*.aab > SHA256SUMS.txt)

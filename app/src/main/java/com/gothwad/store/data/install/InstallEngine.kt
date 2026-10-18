@@ -162,11 +162,11 @@ class InstallEngine(private val appContext: Context, private val apkDirProvider:
             val failed = when (method) {
                 InstallMethod.Shizuku -> InstallPhase.Failed(
                     "Shizuku is not ready.",
-                    "Open Shizuku, start the service and grant Gothwad Store access.",
+                    "Open Shizuku, start the service and grant Kiwi Store access.",
                 )
                 InstallMethod.Root -> InstallPhase.Failed(
                     "Root access is not available.",
-                    "Grant superuser access to Gothwad Store, or pick another installer.",
+                    "Grant superuser access to Kiwi Store, or pick another installer.",
                 )
                 else -> InstallPhase.Failed("That installer is unavailable.")
             }

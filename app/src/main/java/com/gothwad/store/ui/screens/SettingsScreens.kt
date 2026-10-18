@@ -68,7 +68,7 @@ fun SettingsScreen(vm: StoreViewModel, nav: NavController) {
     val current = settings
 
     GothwadScaffold(
-        topBar = { SubScreenHeader(title = "Settings", subtitle = "Gothwad Store", onBack = { nav.popBackStack() }) },
+        topBar = { SubScreenHeader(title = "Settings", subtitle = "Kiwi Store", onBack = { nav.popBackStack() }) },
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
@@ -204,7 +204,7 @@ fun SettingsScreen(vm: StoreViewModel, nav: NavController) {
             item {
                 SettingsGroup {
                     SettingRow(
-                        title = "About Gothwad Store",
+                        title = "About Kiwi Store",
                         subtitle = "Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
                         onClick = { nav.navigate(Routes.ABOUT) },
                     )
@@ -327,7 +327,7 @@ fun NotificationsScreen(vm: StoreViewModel, nav: NavController) {
             item {
                 InfoBanner(
                     title = "Android channel",
-                    message = "Gothwad Store uses one notification channel: “Gothwad Store downloads”. " +
+                    message = "Kiwi Store uses one notification channel: “Kiwi Store downloads”. " +
                         "Android 13+ asks for the notification permission when you start the first download.",
                 )
             }
@@ -472,7 +472,7 @@ fun NetworkScreen(vm: StoreViewModel, nav: NavController) {
                 Column(Modifier.padding(Spacing.screenH)) {
                     InfoBanner(
                         title = "Offline behaviour",
-                        message = "Gothwad Store never invents a catalogue. Without a reachable Worker the " +
+                        message = "Kiwi Store never invents a catalogue. Without a reachable Worker the " +
                             "screens show an error with a retry button instead of demo data.",
                     )
                 }
@@ -496,7 +496,7 @@ fun PrivacyScreen(vm: StoreViewModel, nav: NavController) {
             item {
                 InfoBanner(
                     title = "No trackers, no analytics SDKs",
-                    message = "Gothwad Store talks to two hosts: store.gothwadtech.com (catalogue, downloads, " +
+                    message = "Kiwi Store talks to two hosts: store.gothwadtech.com (catalogue, downloads, " +
                         "reviews) and accounts.gothwadtech.com (sign-in). Everything else is on-device.",
                 )
             }
@@ -691,7 +691,7 @@ fun DeviceInfoScreen(vm: StoreViewModel, nav: NavController) {
                     KeyValueRow("Supported ABIs", android.os.Build.SUPPORTED_ABIS.joinToString(", "))
                 }
             }
-            item { SectionHeader(title = "Gothwad Store") }
+            item { SectionHeader(title = "Kiwi Store") }
             item {
                 Column {
                     KeyValueRow("Version", "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")

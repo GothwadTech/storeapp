@@ -252,7 +252,7 @@ fun AppRow(
             Text(
                 buildString {
                     append(subtitle ?: buildMeta(app, release))
-                    if (app.source != "Gothwad Store") append(" · From ${app.source}")
+                    if (app.source != "Kiwi Store") append(" · From ${app.source}")
                 },
                 fontSize = 12.sp,
                 color = GothwadTheme.extra.textSecondary,
@@ -293,7 +293,7 @@ fun CompactAppRow(
             Text(
                 buildString {
                     append(app.developerName.ifBlank { Format.packageLabel(app.packageName) })
-                    if (app.source != "Gothwad Store") append(" · From ${app.source}")
+                    if (app.source != "Kiwi Store") append(" · From ${app.source}")
                 },
                 fontSize = 11.sp,
                 color = GothwadTheme.extra.textSecondary,

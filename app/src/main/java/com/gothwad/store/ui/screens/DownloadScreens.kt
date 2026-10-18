@@ -136,7 +136,7 @@ fun DownloadsScreen(vm: StoreViewModel, nav: NavController) {
             if (tasks.isEmpty()) {
                 EmptyState(
                     title = "No downloads yet",
-                    message = "Install or update an app and Gothwad Store downloads the APK here first, " +
+                    message = "Install or update an app and Kiwi Store downloads the APK here first, " +
                         "verifies the publisher checksum, then hands it to the installer you picked.",
                     icon = Icons.Filled.Download,
                     actionLabel = "Browse apps",
@@ -454,7 +454,7 @@ fun DownloadHistoryScreen(vm: StoreViewModel, nav: NavController) {
                 item {
                     InfoBanner(
                         title = "History is off",
-                        message = "Turn on “Keep download history” to record every APK Gothwad Store fetches.",
+                        message = "Turn on “Keep download history” to record every APK Kiwi Store fetches.",
                         tone = BannerTone.Warning,
                         action = {
                             OutlineButton("Open download settings", onClick = { nav.navigate(Routes.DOWNLOAD_SETTINGS) })
@@ -705,7 +705,7 @@ fun StorageScreen(vm: StoreViewModel, nav: NavController) {
         topBar = {
             SubScreenHeader(
                 title = "Storage",
-                subtitle = "APKs kept by Gothwad Store",
+                subtitle = "APKs kept by Kiwi Store",
                 onBack = { nav.popBackStack() },
             )
         },

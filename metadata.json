@@ -1,5 +1,5 @@
 {
-  "name": "Gothwad Store",
+  "name": "Kiwi Store",
   "description": "Google Play Store style app store featuring apps, games, search, and curated categories",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

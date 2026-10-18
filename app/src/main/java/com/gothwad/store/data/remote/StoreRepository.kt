@@ -114,7 +114,7 @@ class StoreRepository(
         }
         val response = call { api.detail(id) }
         if (response.app.status != "published") throw StoreException(
-            "This app is no longer available on Gothwad Store.",
+            "This app is no longer available on Kiwi Store.",
             StoreException.Kind.NOT_PUBLISHED,
         )
         return response.copy(reviews = response.reviews.sortedByDescending { it.createdAt })
@@ -168,9 +168,9 @@ class StoreRepository(
         } catch (e: UnknownHostException) {
             throw StoreException("No connection. Check your network and try again.", StoreException.Kind.OFFLINE)
         } catch (e: SocketTimeoutException) {
-            throw StoreException("Gothwad Store took too long to answer. Try again.", StoreException.Kind.TIMEOUT)
+            throw StoreException("Kiwi Store took too long to answer. Try again.", StoreException.Kind.TIMEOUT)
         } catch (e: IOException) {
-            throw StoreException("Could not reach Gothwad Store. Check your connection and retry.", StoreException.Kind.OFFLINE)
+            throw StoreException("Could not reach Kiwi Store. Check your connection and retry.", StoreException.Kind.OFFLINE)
         } catch (e: StoreException) {
             throw e
         } catch (e: Exception) {
@@ -193,7 +193,7 @@ class StoreRepository(
             403 -> StoreException(serverMessage ?: "You do not have access to this action.", StoreException.Kind.SERVER, code)
             404 -> StoreException(serverMessage ?: "This app is no longer available.", StoreException.Kind.NOT_FOUND, code)
             503 -> StoreException(serverMessage ?: "The Store service is temporarily unavailable.", StoreException.Kind.UNCONFIGURED, code)
-            in 500..599 -> StoreException(serverMessage ?: "Gothwad Store is having trouble. Try again shortly.", StoreException.Kind.SERVER, code)
+            in 500..599 -> StoreException(serverMessage ?: "Kiwi Store is having trouble. Try again shortly.", StoreException.Kind.SERVER, code)
             else -> StoreException(serverMessage ?: "The Store request failed ($code).", StoreException.Kind.SERVER, code)
         }
     }

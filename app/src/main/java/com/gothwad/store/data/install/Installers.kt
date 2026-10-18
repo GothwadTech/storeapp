@@ -14,7 +14,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
- * The four ways Gothwad Store can install an APK. Every path reports through
+ * The four ways Kiwi Store can install an APK. Every path reports through
  * [InstallPhase] so the UI never has to guess what happened.
  */
 object Installers {
@@ -82,13 +82,13 @@ object Installers {
                 runCatching { session.abandon() }
                 InstallPhase.Failed(
                     error.message ?: "Android's installer rejected the session.",
-                    "If the dialog never appears, allow Gothwad Store to install unknown apps.",
+                    "If the dialog never appears, allow Kiwi Store to install unknown apps.",
                 )
             }
         } catch (error: SecurityException) {
             InstallPhase.Failed(
                 "Android blocked the installer session.",
-                "Settings → Apps → Gothwad Store → Install unknown apps → Allow.",
+                "Settings → Apps → Kiwi Store → Install unknown apps → Allow.",
             )
         } catch (error: Throwable) {
             InstallPhase.Failed(error.message ?: "Could not open an installer session.")
@@ -128,7 +128,7 @@ object Installers {
             } catch (_: ActivityNotFoundException) {
                 InstallPhase.Failed(
                     "This device has no package installer available for APK files.",
-                    "Enable “Install unknown apps” for Gothwad Store, or use the Shizuku/root installer.",
+                    "Enable “Install unknown apps” for Kiwi Store, or use the Shizuku/root installer.",
                 )
             }
         }
