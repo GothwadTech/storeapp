@@ -2,8 +2,8 @@ package com.gothwad.store.data.remote
 
 import android.util.Log
 import com.gothwad.store.data.model.ApiErrorBody
-import com.gothwad.store.data.model.CatalogResponse
 import com.gothwad.store.data.model.AppDetailResponse
+import com.gothwad.store.data.model.CatalogResponse
 import com.gothwad.store.data.model.LibraryBody
 import com.gothwad.store.data.model.MeResponse
 import com.gothwad.store.data.model.ReportBody
@@ -42,12 +42,16 @@ class StoreRepository(
     val fdroidError: StateFlow<String?> = fdroid.lastError
 
     /**
+     * Emits whenever the F-Droid + IzzyOnDroid catalogue is loaded from disk
+     * cache or updated over the network.
+     */
+    val fdroidUpdates: StateFlow<CatalogResponse?> = fdroid.catalogFlow
+
+    /**
      * The Kiwi Store catalogue only.
      *
      * Split out from [catalog] so the UI can show first-party listings right
-     * away and add the F-Droid catalogue once its (large) index has been
-     * downloaded — waiting for ~8 MB before rendering anything leaves the
-     * user staring at a spinner.
+     * away and add the F-Droid catalogue once its index has been downloaded.
      */
     suspend fun firstPartyCatalog(kind: String?, category: String?, query: String): CatalogResponse {
         val trimmed = query.trim()
@@ -73,16 +77,69 @@ class StoreRepository(
         query: String = "",
     ): CatalogResponse = combine(base, query.trim(), kind, category)
 
+    /**
+     * Synchronously merges [gothwad] first-party listings with an already-loaded
+     * [external] F-Droid catalogue, applying [kind], [category], and [query]
+     * filters and relevance ranking for search.
+     */
+    fun mergeWithExternal(
+        gothwad: CatalogResponse,
+        external: CatalogResponse,
+        kind: String?,
+        category: String?,
+        query: String = "",
+    ): CatalogResponse {
+        if (external.apps.isEmpty()) return gothwad
+        val ownedPackages = gothwad.apps.mapTo(mutableSetOf()) { it.packageName }
+        val q = query.trim().lowercase()
+
+        val baseSequence = external.apps
+            .asSequence()
+            .filter { app ->
+                app.packageName !in ownedPackages &&
+                    kindMatches(app, kind) &&
+                    categoryMatches(app, category)
+            }
+
+        val candidates = if (q.isEmpty()) {
+            baseSequence.take(MAX_FDROID_APPS).toList()
+        } else {
+            baseSequence
+                .mapNotNull { app ->
+                    val score = searchScore(app, q)
+                    if (score > 0) app to score else null
+                }
+                .sortedWith(
+                    compareByDescending<Pair<StoreApp, Int>> { it.second }
+                        .thenByDescending { it.first.updatedAt },
+                )
+                .map { it.first }
+                .take(MAX_FDROID_APPS)
+                .toList()
+        }
+
+        val ids = candidates.mapTo(mutableSetOf()) { it.id }
+        return gothwad.copy(
+            // Distinct by id: the UI uses the id as the list key, so a listing
+            // that appears twice would crash the list.
+            apps = (gothwad.apps + candidates).distinctBy { it.id },
+            releases = gothwad.releases + external.releases.filter { it.appId in ids },
+        )
+    }
+
     /** The optional F-Droid catalogue on its own. */
-    suspend fun fdroidCatalog(): CatalogResponse = fdroid.catalog()
+    suspend fun fdroidCatalog(forceRefresh: Boolean = false): CatalogResponse =
+        fdroid.catalog(forceRefresh)
 
     suspend fun catalog(kind: String?, category: String?, query: String): CatalogResponse {
-        val base = firstPartyCatalog(kind, category, query)
+        val base = runCatching { firstPartyCatalog(kind, category, query) }
+            .getOrDefault(CatalogResponse())
         return combine(base, query.trim(), kind, category)
     }
 
     suspend fun home(kind: String?): CatalogResponse {
-        val base = firstPartyHome(kind)
+        val base = runCatching { firstPartyHome(kind) }
+            .getOrDefault(CatalogResponse())
         return combine(base, "", kind, null)
     }
 
@@ -112,24 +169,28 @@ class StoreRepository(
         kind: String?,
         category: String?,
     ): CatalogResponse {
-        // The first-party catalogue remains usable if the optional upstream is unavailable.
         val external = loadFdroid() ?: return gothwad
-        val ownedPackages = gothwad.apps.mapTo(mutableSetOf()) { it.packageName }
-        val q = query.trim().lowercase()
-        val candidates = external.apps.filter { app ->
-            app.packageName !in ownedPackages &&
-                kindMatches(app, kind) &&
-                categoryMatches(app, category) &&
-                (q.isEmpty() || app.name.contains(q, true) || app.packageName.contains(q, true) ||
-                    app.shortDesc.contains(q, true) || app.developerName.contains(q, true))
-        }
-        val ids = candidates.mapTo(mutableSetOf()) { it.id }
-        return gothwad.copy(
-            // Distinct by id: the UI uses the id as the list key, so a listing
-            // that appears twice would crash the list.
-            apps = (gothwad.apps + candidates).distinctBy { it.id },
-            releases = gothwad.releases + external.releases.filter { it.appId in ids },
-        )
+        return mergeWithExternal(gothwad, external, kind, category, query)
+    }
+
+    private fun searchScore(app: StoreApp, needle: String): Int {
+        val nameLower = app.name.lowercase()
+        val pkgLower = app.packageName.lowercase()
+        val shortLower = app.shortDesc.lowercase()
+        val devLower = app.developerName.lowercase()
+
+        if (nameLower == needle || pkgLower == needle) return 100
+        if (nameLower.startsWith(needle)) return 85
+        val words = nameLower.split(' ', '-', '_', '.', ':')
+        if (words.any { it == needle }) return 75
+        if (words.any { it.startsWith(needle) }) return 65
+        if (nameLower.contains(needle)) return 55
+        if (pkgLower.contains(needle)) return 45
+        if (app.tags.any { it.lowercase().contains(needle) }) return 35
+        if (devLower.contains(needle)) return 30
+        if (shortLower.contains(needle)) return 20
+        if (app.fullDesc.lowercase().contains(needle)) return 10
+        return 0
     }
 
     /** F-Droid keeps games in a category and everything else in "app". */
@@ -141,11 +202,17 @@ class StoreRepository(
             else -> true
         }
 
-    /** Both catalogues use Kiwi Store slugs, so a plain comparison is enough. */
-    private fun categoryMatches(app: StoreApp, category: String?): Boolean {
-        val wanted = category?.trim().orEmpty()
+    /**
+     * Matches an app against a category slug or display name, checking both
+     * `app.category`, `app.tags`, and the normalized Kiwi Store / F-Droid
+     * category equivalence groups.
+     */
+    internal fun categoryMatches(app: StoreApp, category: String?): Boolean {
+        val wanted = normalizeCategory(category)
         if (wanted.isEmpty()) return true
-        return app.category.equals(wanted, ignoreCase = true)
+        val equivalents = CATEGORY_EQUIVALENTS[wanted] ?: setOf(wanted)
+        if (normalizeCategory(app.category) in equivalents) return true
+        return app.tags.any { normalizeCategory(it) in equivalents }
     }
 
     /**
@@ -172,9 +239,21 @@ class StoreRepository(
     }
 
     suspend fun categories(): List<StoreCategory> {
-        val response = call { api.categories() }
-        assertConfigured(response.source)
-        return response.categories.sortedBy { it.name.lowercase() }
+        val upstream = runCatching {
+            val response = call { api.categories() }
+            assertConfigured(response.source)
+            response.categories
+        }.getOrDefault(emptyList())
+
+        val existingSlugs = upstream.mapTo(HashSet()) { normalizeCategory(it.slug) }
+        val merged = ArrayList<StoreCategory>(upstream.size + DEFAULT_CATEGORIES.size)
+        merged.addAll(upstream)
+        for (fallback in DEFAULT_CATEGORIES) {
+            if (normalizeCategory(fallback.slug) !in existingSlugs) {
+                merged += fallback
+            }
+        }
+        return merged.sortedBy { it.name.lowercase() }
     }
 
     suspend fun detail(id: String): AppDetailResponse {
@@ -182,12 +261,18 @@ class StoreRepository(
             return fdroid.find(id.removePrefix("fdroid:"))
                 ?: throw StoreException("This F-Droid app is no longer in its repository index.", StoreException.Kind.NOT_FOUND)
         }
-        val response = call { api.detail(id) }
-        if (response.app.status != "published") throw StoreException(
-            "This app is no longer available on Kiwi Store.",
-            StoreException.Kind.NOT_PUBLISHED,
-        )
-        return response.copy(reviews = response.reviews.sortedByDescending { it.createdAt })
+        val firstParty = runCatching {
+            val response = call { api.detail(id) }
+            if (response.app.status != "published") throw StoreException(
+                "This app is no longer available on Kiwi Store.",
+                StoreException.Kind.NOT_PUBLISHED,
+            )
+            response.copy(reviews = response.reviews.sortedByDescending { it.createdAt })
+        }
+        firstParty.getOrNull()?.let { return it }
+        fdroid.find(id)?.let { return it }
+        throw (firstParty.exceptionOrNull()
+            ?: StoreException("This app is no longer available.", StoreException.Kind.NOT_FOUND))
     }
 
     /** Releases this device could install, newest first. */
@@ -268,8 +353,53 @@ class StoreRepository(
         }
     }
 
-    private companion object {
-        const val TAG = "StoreRepository"
+    companion object {
+        private const val TAG = "StoreRepository"
+        private const val MAX_FDROID_APPS = 500
+
+        private val DEFAULT_CATEGORIES = listOf(
+            StoreCategory(slug = "tools", name = "Tools & Utilities", kind = "app"),
+            StoreCategory(slug = "browser", name = "Browsers & Internet", kind = "app"),
+            StoreCategory(slug = "communication", name = "Communication", kind = "app"),
+            StoreCategory(slug = "productivity", name = "Productivity", kind = "app"),
+            StoreCategory(slug = "education", name = "Science & Education", kind = "app"),
+            StoreCategory(slug = "music", name = "Music & Audio", kind = "app"),
+            StoreCategory(slug = "photo", name = "Photography & Graphics", kind = "app"),
+            StoreCategory(slug = "finance", name = "Money & Finance", kind = "app"),
+            StoreCategory(slug = "health", name = "Sports & Health", kind = "app"),
+            StoreCategory(slug = "maps", name = "Maps & Navigation", kind = "app"),
+            StoreCategory(slug = "entertainment", name = "Games & Entertainment", kind = "both"),
+        )
+
+        private val CATEGORY_EQUIVALENTS: Map<String, Set<String>> = mapOf(
+            "games" to setOf("games", "game", "entertainment"),
+            "game" to setOf("games", "game", "entertainment"),
+            "entertainment" to setOf("entertainment", "games", "game", "video", "multimedia"),
+            "browser" to setOf("browser", "internet", "web", "communication"),
+            "internet" to setOf("internet", "browser", "web", "communication"),
+            "communication" to setOf("communication", "messaging", "phone-sms", "internet", "social", "connectivity"),
+            "social" to setOf("social", "communication", "messaging", "internet"),
+            "tools" to setOf("tools", "system", "security", "development", "theming", "automation", "connectivity", "navigation", "xposed"),
+            "security" to setOf("security", "tools", "privacy", "system"),
+            "productivity" to setOf("productivity", "reading", "writing", "office", "time", "calendar-agenda", "note", "task"),
+            "books" to setOf("books", "reading", "writing", "education", "science-education", "religion"),
+            "news" to setOf("news", "reading", "internet", "entertainment", "news-magazines", "readers-news"),
+            "education" to setOf("education", "science-education", "reading", "books", "religion"),
+            "music" to setOf("music", "multimedia", "audio", "music-audio"),
+            "video" to setOf("video", "multimedia", "entertainment", "music"),
+            "photo" to setOf("photo", "photography", "graphics", "images", "wallpapers"),
+            "photography" to setOf("photography", "photo", "graphics", "images", "wallpapers"),
+            "finance" to setOf("finance", "money", "shopping", "business"),
+            "shopping" to setOf("shopping", "money", "finance"),
+            "health" to setOf("health", "sports-health", "lifestyle", "food", "entertainment"),
+            "lifestyle" to setOf("lifestyle", "sports-health", "health", "food"),
+            "food" to setOf("food", "lifestyle", "health", "entertainment"),
+            "maps" to setOf("maps", "navigation", "navigation-maps", "travel", "tools"),
+            "travel" to setOf("travel", "navigation", "maps"),
+        )
+
+        private fun normalizeCategory(value: String?): String =
+            value?.trim()?.lowercase()?.replace(Regex("[^a-z0-9]+"), "-")?.trim('-').orEmpty()
     }
 }
 

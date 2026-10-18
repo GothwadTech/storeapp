@@ -66,7 +66,10 @@ private fun FdroidStatusNotice(vm: StoreViewModel, onRetry: () -> Unit) {
             message = error.orEmpty(),
             tone = BannerTone.Warning,
             action = {
-                TextButton(onClick = onRetry) { Text("Retry") }
+                TextButton(onClick = {
+                    vm.retryFdroid()
+                    onRetry()
+                }) { Text("Retry") }
             },
         )
     }

@@ -135,7 +135,7 @@ private fun HomeContent(
                     message = error,
                     tone = BannerTone.Warning,
                     action = {
-                        TextButton(onClick = vm::loadFdroid) { Text("Retry") }
+                        TextButton(onClick = vm::retryFdroid) { Text("Retry") }
                     },
                 )
             }
@@ -156,21 +156,26 @@ private fun HomeContent(
     val suggested = (nonGames + games).take(12)
     val trending = apps.sortedByDescending { it.downloadsCount }.take(5)
     val topFree = nonGames.ifEmpty { apps }.sortedByDescending { it.downloadsCount }.take(9)
-    val firstPartyPackages = apps.mapTo(mutableSetOf()) { it.packageName }
-    val fdroidPicks = fdroidApps.filterNot { it.packageName in firstPartyPackages }.take(12)
+    val firstPartyPackages = apps
+        .filter { !it.source.equals("F-Droid", ignoreCase = true) }
+        .mapTo(mutableSetOf()) { it.packageName }
+    val fdroidPicks = fdroidApps
+        .ifEmpty { apps.filter { it.source.equals("F-Droid", ignoreCase = true) } }
+        .filterNot { it.packageName in firstPartyPackages }
+        .take(16)
 
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding + Spacing.bottomContentPadding),
     ) {
-        if (fdroidError != null) {
+        if (fdroidError != null && fdroidPicks.isEmpty()) {
             item {
                 InfoBanner(
                     title = "F-Droid catalogue unavailable",
                     message = fdroidError,
                     tone = BannerTone.Warning,
                     action = {
-                        TextButton(onClick = vm::loadFdroid) { Text("Retry") }
+                        TextButton(onClick = vm::retryFdroid) { Text("Retry") }
                     },
                 )
             }
@@ -352,13 +357,16 @@ private fun HomeContent(
 private val CATEGORY_ICONS: Map<String, ImageVector> = mapOf(
     "social" to Icons.Filled.Groups,
     "communication" to Icons.Filled.ChatBubbleOutline,
+    "browser" to Icons.Filled.Groups,
     "tools" to Icons.Filled.Build,
     "games" to Icons.Filled.SportsEsports,
     "game" to Icons.Filled.SportsEsports,
     "photography" to Icons.Filled.PhotoCamera,
+    "photo" to Icons.Filled.PhotoCamera,
     "education" to Icons.Filled.School,
     "finance" to Icons.Filled.AccountBalance,
     "health" to Icons.Filled.FavoriteBorder,
+    "lifestyle" to Icons.Filled.FavoriteBorder,
     "shopping" to Icons.Filled.ShoppingBag,
     "music" to Icons.Filled.MusicNote,
     "video" to Icons.Filled.PlayCircle,
