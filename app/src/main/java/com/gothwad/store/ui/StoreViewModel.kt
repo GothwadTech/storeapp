@@ -255,8 +255,8 @@ class StoreViewModel : ViewModel() {
         kiwiJob = viewModelScope.launch {
             if (_kiwi.value !is UiState.Ready) _kiwi.value = UiState.Loading
             _kiwi.value = load {
-                repository.firstPartyCatalog(null, null, "")
-                    .copy(apps = it.apps.filter { app -> app.isKiwiStoreListing })
+                val response = repository.firstPartyCatalog(null, null, "")
+                response.copy(apps = response.apps.filter { app -> app.isKiwiStoreListing })
             }
         }
     }
