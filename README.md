@@ -87,12 +87,17 @@ backend contract, device checks and next steps.
 
 ## Latest verified build
 
+[Kiwi Store v1.0.15](https://github.com/GothwadTech/storeapp/releases/tag/v1.0.15)
+- install `KiwiStore-v1.0.15-Release.apk` on a device (Android 7.0+).
+- Signed with the permanent release key, so it updates an earlier Kiwi Store
+  installation instead of asking for a second copy.
+
 The GitHub Actions runs are the verification for this repository - the sandbox
 that authors the code has no Java/Android SDK, so compile, test, lint, signing
 and signature checks happen in CI. Open the
 [Actions tab](https://github.com/GothwadTech/storeapp/actions) for the newest
-run and download `KiwiStore-v<version>-Release.apk` from the release or from
-the run artifacts.
+run, or pull the
+[latest release](https://github.com/GothwadTech/storeapp/releases/latest).
 
 Device installation and the full native account feature parity are still not
 verified end to end.

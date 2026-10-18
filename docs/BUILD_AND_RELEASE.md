@@ -108,4 +108,10 @@ production-ready.
     device test.
 - 2026-10-18: the workflows were rewritten to the Browser/Launcher shape - every
   push to `main` publishes a release - and the launcher icon set was replaced
-  with the Icon Kitchen assets.
+  with the Icon Kitchen assets. The first release published that way is
+  [v1.0.15](https://github.com/GothwadTech/storeapp/releases/tag/v1.0.15)
+  (run `39101551940`): tests, lint, Release/Debug APK and AAB build, signing,
+  signature verification, checksum file and the GitHub Release with
+  `KiwiStore-v1.0.15-Release.apk`, `KiwiStore-v1.0.15-Debug.apk`,
+  `KiwiStore-v1.0.15-PlayStore.aab`, `SIGNING.txt` and `SHA256SUMS.txt` - all
+  signed with the permanent release key.
