@@ -79,6 +79,7 @@ object Routes {
     const val APPEARANCE = "settings/appearance"
     const val NOTIFICATIONS = "settings/notifications"
     const val NETWORK = "settings/network"
+    const val SOURCES = "settings/sources"
     const val PRIVACY = "settings/privacy"
     const val ADVANCED = "settings/advanced"
     const val DEVICE_INFO = "settings/device"

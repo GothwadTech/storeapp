@@ -48,6 +48,12 @@ class StoreRepository(
     val fdroidUpdates: StateFlow<CatalogResponse?> = fdroid.catalogFlow
 
     /**
+     * Live status of the upstream catalogue: which repos are mirrored, how
+     * big they are, when they were last synced and what is running now.
+     */
+    val fdroidStatus: StateFlow<FdroidStatus> = fdroid.status
+
+    /**
      * The Kiwi Store catalogue only.
      *
      * Split out from [catalog] so the UI can show first-party listings right

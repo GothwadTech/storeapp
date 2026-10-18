@@ -33,11 +33,10 @@ import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Wifi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -67,15 +66,13 @@ import com.gothwad.store.ui.StoreEvent
 import com.gothwad.store.ui.StoreViewModel
 import com.gothwad.store.ui.components.BannerTone
 import com.gothwad.store.ui.components.BrandAvatar
-import com.gothwad.store.ui.components.DownloadsAction
 import com.gothwad.store.ui.components.GothwadScaffold
-import com.gothwad.store.ui.components.GothwadTopBar
+import com.gothwad.store.ui.components.KiwiStoreTopBar
 import com.gothwad.store.ui.components.InfoBanner
 import com.gothwad.store.ui.components.KeyValueRow
 import com.gothwad.store.ui.components.OutlineButton
 import com.gothwad.store.ui.components.PillLabel
 import com.gothwad.store.ui.components.PrimaryButton
-import com.gothwad.store.ui.components.SearchAction
 import com.gothwad.store.ui.components.SectionHeader
 import com.gothwad.store.ui.components.SettingRow
 import com.gothwad.store.ui.components.SettingsGroup
@@ -104,20 +101,12 @@ fun AccountScreen(vm: StoreViewModel, nav: NavController) {
     // was missing entirely.
     GothwadScaffold(
         topBar = {
-            GothwadTopBar(
-                title = "Profile",
-                showBrandMark = true,
-                actions = {
-                    SearchAction { nav.navigate(Routes.SEARCH) }
-                    DownloadsAction { nav.navigate(Routes.DOWNLOADS) }
-                    IconButton(onClick = { nav.navigate(Routes.SETTINGS) }) {
-                        Icon(
-                            Icons.Filled.Settings,
-                            contentDescription = "Settings",
-                            tint = GothwadTheme.extra.textSecondary,
-                        )
-                    }
-                },
+            // Every tab shares the very same header: Kiwi Store icon, search
+            // field, profile avatar.
+            KiwiStoreTopBar(
+                onSearch = { nav.navigate(Routes.SEARCH) },
+                onProfile = { nav.navigate(Routes.SETTINGS) },
+                onLogo = { nav.navigate(Routes.HOME) { launchSingleTop = true } },
             )
         },
     ) { padding ->
@@ -271,6 +260,12 @@ fun AccountScreen(vm: StoreViewModel, nav: NavController) {
                         subtitle = "APKs kept and cleanup tools",
                         icon = Icons.Filled.Storage,
                         onClick = { nav.navigate(Routes.STORAGE) },
+                    )
+                    SettingRow(
+                        title = "App sources",
+                        subtitle = "F-Droid repos, catalogue and what is running",
+                        icon = Icons.Filled.Storefront,
+                        onClick = { nav.navigate(Routes.SOURCES) },
                     )
                     SettingRow(
                         title = "Privacy",

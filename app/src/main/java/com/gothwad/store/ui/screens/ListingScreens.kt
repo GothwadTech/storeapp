@@ -42,7 +42,6 @@ import com.gothwad.store.ui.UiState
 import com.gothwad.store.ui.components.AppGridCard
 import com.gothwad.store.ui.components.AppRowItem
 import com.gothwad.store.ui.components.BannerTone
-import com.gothwad.store.ui.components.AvatarAction
 import com.gothwad.store.ui.components.CategoryTile
 import com.gothwad.store.ui.components.DividerLine
 import com.gothwad.store.ui.components.DownloadsAction
@@ -50,6 +49,7 @@ import com.gothwad.store.ui.components.EmptyState
 import com.gothwad.store.ui.components.ErrorState
 import com.gothwad.store.ui.components.InfoBanner
 import com.gothwad.store.ui.components.GothwadScaffold
+import com.gothwad.store.ui.components.KiwiStoreTopBar
 import com.gothwad.store.ui.components.GothwadTopBar
 import com.gothwad.store.ui.components.PlayChip
 import com.gothwad.store.ui.components.SearchAction
@@ -90,14 +90,12 @@ fun AppsScreen(vm: StoreViewModel, nav: NavController) {
 
     GothwadScaffold(
         topBar = {
-            GothwadTopBar(
-                title = "Apps",
-                showBrandMark = true,
-                actions = {
-                    SearchAction { nav.navigate(Routes.SEARCH) }
-                    DownloadsAction { nav.navigate(Routes.DOWNLOADS) }
-                    AvatarAction { nav.navigate(Routes.ACCOUNT) }
-                },
+            // Every tab shares the very same header: Kiwi Store icon, search
+            // field, profile avatar.
+            KiwiStoreTopBar(
+                onSearch = { nav.navigate(Routes.SEARCH) },
+                onProfile = { nav.navigate(Routes.ACCOUNT) },
+                onLogo = { nav.navigate(Routes.HOME) { launchSingleTop = true } },
             )
         },
     ) { padding ->
@@ -132,6 +130,7 @@ fun AppsScreen(vm: StoreViewModel, nav: NavController) {
                     vm = vm,
                     nav = nav,
                     emptyTitle = "No apps published yet",
+                    headerTitle = "Apps",
                 )
             }
         }
@@ -158,15 +157,12 @@ fun KiwiScreen(vm: StoreViewModel, nav: NavController) {
 
     GothwadScaffold(
         topBar = {
-            GothwadTopBar(
-                title = "Kiwi",
-                subtitle = "Live on kiwistore.gothwadtech.com",
-                showBrandMark = true,
-                actions = {
-                    SearchAction { nav.navigate(Routes.SEARCH) }
-                    DownloadsAction { nav.navigate(Routes.DOWNLOADS) }
-                    AvatarAction { nav.navigate(Routes.ACCOUNT) }
-                },
+            // Every tab shares the very same header: Kiwi Store icon, search
+            // field, profile avatar.
+            KiwiStoreTopBar(
+                onSearch = { nav.navigate(Routes.SEARCH) },
+                onProfile = { nav.navigate(Routes.ACCOUNT) },
+                onLogo = { nav.navigate(Routes.HOME) { launchSingleTop = true } },
             )
         },
     ) { padding ->
@@ -242,14 +238,12 @@ fun GamesScreen(vm: StoreViewModel, nav: NavController) {
 
     GothwadScaffold(
         topBar = {
-            GothwadTopBar(
-                title = "Games",
-                showBrandMark = true,
-                actions = {
-                    SearchAction { nav.navigate(Routes.SEARCH) }
-                    DownloadsAction { nav.navigate(Routes.DOWNLOADS) }
-                    AvatarAction { nav.navigate(Routes.ACCOUNT) }
-                },
+            // Every tab shares the very same header: Kiwi Store icon, search
+            // field, profile avatar.
+            KiwiStoreTopBar(
+                onSearch = { nav.navigate(Routes.SEARCH) },
+                onProfile = { nav.navigate(Routes.ACCOUNT) },
+                onLogo = { nav.navigate(Routes.HOME) { launchSingleTop = true } },
             )
         },
     ) { padding ->
@@ -266,6 +260,7 @@ fun GamesScreen(vm: StoreViewModel, nav: NavController) {
                     emptyTitle = "No games published yet",
                     emptyMessage = "Games appear here as soon as a developer publishes one from the " +
                         "Gothwad Developer Console.",
+                    headerTitle = "Games",
                 )
             }
         }
@@ -280,6 +275,7 @@ private fun AppList(
     nav: NavController,
     emptyTitle: String,
     emptyMessage: String = "Nothing is published in this section yet.",
+    headerTitle: String? = null,
 ) {
     if (apps.isEmpty()) {
         EmptyState(
@@ -292,6 +288,14 @@ private fun AppList(
         return
     }
     LazyColumn(contentPadding = PaddingValues(bottom = Spacing.bottomContentPadding)) {
+        if (headerTitle != null) {
+            item {
+                SectionHeader(
+                    title = headerTitle,
+                    subtitle = "${apps.size} listing${if (apps.size == 1) "" else "s"}",
+                )
+            }
+        }
         itemsIndexed(apps, key = { _, app -> app.id }) { index, app ->
             Column {
                 if (index > 0) DividerLine(startIndent = 64.dp)

@@ -66,6 +66,7 @@ import com.gothwad.store.ui.screens.SearchScreen
 import com.gothwad.store.ui.screens.SettingsScreen
 import com.gothwad.store.ui.screens.ShizukuScreen
 import com.gothwad.store.ui.screens.SignInScreen
+import com.gothwad.store.ui.screens.SourcesScreen
 import com.gothwad.store.ui.screens.StorageScreen
 import com.gothwad.store.ui.screens.TopChartsScreen
 import com.gothwad.store.ui.screens.WelcomeScreen
@@ -226,6 +227,7 @@ fun AppNavHost(
             composable(Routes.APPEARANCE) { AppearanceScreen(vm, navController) }
             composable(Routes.NOTIFICATIONS) { NotificationsScreen(vm, navController) }
             composable(Routes.NETWORK) { NetworkScreen(vm, navController) }
+            composable(Routes.SOURCES) { SourcesScreen(vm, navController) }
             composable(Routes.PRIVACY) { PrivacyScreen(vm, navController) }
             composable(Routes.ADVANCED) { AdvancedScreen(vm, navController) }
             composable(Routes.DEVICE_INFO) { DeviceInfoScreen(vm, navController) }

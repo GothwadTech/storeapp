@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Text
@@ -128,6 +129,18 @@ fun SettingsScreen(vm: StoreViewModel, nav: NavController) {
                         title = "Download history",
                         subtitle = "Everything the app downloaded",
                         onClick = { nav.navigate(Routes.DOWNLOAD_HISTORY) },
+                    )
+                }
+            }
+
+            item { SectionHeader(title = "Catalogue & sources") }
+            item {
+                SettingsGroup {
+                    SettingRow(
+                        title = "App sources",
+                        subtitle = "Kiwi Store web, F-Droid repos and what is running",
+                        icon = Icons.Filled.Storefront,
+                        onClick = { nav.navigate(Routes.SOURCES) },
                     )
                 }
             }
@@ -609,9 +622,24 @@ fun AdvancedScreen(vm: StoreViewModel, nav: NavController) {
                 Column {
                     val fdroid by vm.fdroid.collectAsStateWithLifecycle()
                     val fdroidError by vm.fdroidError.collectAsStateWithLifecycle()
+                    val sources by vm.fdroidStatus.collectAsStateWithLifecycle()
+                    KeyValueRow("Kiwi Store web", BuildConfig.STORE_WEB_URL)
+                    KeyValueRow("F-Droid repository", FdroidCatalog.REPO_URL)
                     KeyValueRow("F-Droid index", FdroidCatalog.INDEX_URL)
                     KeyValueRow("F-Droid apps", "${fdroid.apps.size}")
+                    KeyValueRow("F-Droid releases", "${sources.totalReleases}")
+                    KeyValueRow("IzzyOnDroid repository", FdroidCatalog.IZZY_REPO_URL)
+                    KeyValueRow("Mirrors", "${sources.mirrors.size} HTTPS hosts")
                     fdroidError?.let { KeyValueRow("F-Droid problem", it) }
+                }
+            }
+            item {
+                Column(Modifier.padding(Spacing.screenH)) {
+                    OutlineButton(
+                        label = "Open app sources",
+                        onClick = { nav.navigate(Routes.SOURCES) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
             }
             item { SectionHeader(title = "Maintenance") }

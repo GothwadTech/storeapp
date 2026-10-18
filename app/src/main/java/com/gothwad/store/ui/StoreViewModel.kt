@@ -15,6 +15,7 @@ import com.gothwad.store.data.model.CatalogResponse
 import com.gothwad.store.data.model.StoreApp
 import com.gothwad.store.data.model.StoreCategory
 import com.gothwad.store.data.model.StoreRelease
+import com.gothwad.store.data.remote.FdroidStatus
 import com.gothwad.store.data.remote.StoreException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -109,6 +110,12 @@ class StoreViewModel : ViewModel() {
 
     /** Why the F-Droid catalogue is missing, if it is. */
     val fdroidError: StateFlow<String?> = repository.fdroidError
+
+    /**
+     * Live status of the upstream catalogue (F-Droid + IzzyOnDroid): repo
+     * sizes, sync times and what is running right now. Settings shows it.
+     */
+    val fdroidStatus: StateFlow<FdroidStatus> = repository.fdroidStatus
 
     val downloads: StateFlow<List<DownloadTask>> = downloader.tasks
     val installPhases: StateFlow<Map<String, InstallPhase>> = installer.phases
