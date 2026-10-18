@@ -96,10 +96,11 @@ fun MyAppsScreen(vm: StoreViewModel, nav: NavController, initialTab: String? = n
 
     val storeApps = known.values.toList()
     val installed = libraryState.installed
-    val updates = remember(storeApps, installed) {
+    val releases by vm.releases.collectAsStateWithLifecycle()
+    val updates = remember(storeApps, installed, releases) {
         storeApps.mapNotNull { app ->
             val installedVersion = installed[app.packageName] ?: return@mapNotNull null
-            val newest = vm.releaseFor(app) ?: return@mapNotNull null
+            val newest = releases[app.id] ?: return@mapNotNull null
             if (newest.versionCode > installedVersion) app to newest else null
         }
     }

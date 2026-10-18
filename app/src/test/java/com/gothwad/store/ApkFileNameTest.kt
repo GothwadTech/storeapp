@@ -37,7 +37,7 @@ class ApkFileNameTest {
     @Test
     fun `illegal characters never survive`() {
         val fileName = name(packageName = "com.gothwad:bröwser?", versionName = "a:b*c")
-        assertTrue(fileName.matches(Regex("[A-Za-z0-9._-]+\\.apk")), "unexpected file name: $fileName")
+        assertTrue("unexpected file name: $fileName", fileName.matches(Regex("[A-Za-z0-9._-]+\\.apk")))
     }
 
     @Test
@@ -53,7 +53,7 @@ class ApkFileNameTest {
     @Test
     fun `very long names are capped`() {
         val fileName = name(packageName = "com.gothwad." + "a".repeat(200), versionName = "1.0")
-        assertTrue(fileName.length <= 104, "file name is too long: ${fileName.length}")
+        assertTrue("file name is too long: ${fileName.length}", fileName.length <= 104)
         assertTrue(fileName.endsWith(".apk"))
     }
 }
