@@ -36,6 +36,7 @@ import kotlinx.coroutines.launch
 import com.gothwad.store.BuildConfig
 import com.gothwad.store.core.AppGraph
 import com.gothwad.store.core.Format
+import com.gothwad.store.data.remote.FdroidCatalog
 import com.gothwad.store.data.settings.ChartTab
 import com.gothwad.store.data.settings.ListingLayout
 import com.gothwad.store.data.settings.ThemeMode
@@ -601,6 +602,16 @@ fun AdvancedScreen(vm: StoreViewModel, nav: NavController) {
                     KeyValueRow("Accounts API", BuildConfig.ACCOUNTS_API_BASE_URL)
                     KeyValueRow("Console", BuildConfig.CONSOLE_URL)
                     KeyValueRow("OAuth client", BuildConfig.OAUTH_CLIENT_ID)
+                }
+            }
+            item { SectionHeader(title = "Catalogue sources") }
+            item {
+                Column {
+                    val fdroid by vm.fdroid.collectAsStateWithLifecycle()
+                    val fdroidError by vm.fdroidError.collectAsStateWithLifecycle()
+                    KeyValueRow("F-Droid index", FdroidCatalog.INDEX_URL)
+                    KeyValueRow("F-Droid apps", "${fdroid.apps.size}")
+                    fdroidError?.let { KeyValueRow("F-Droid problem", it) }
                 }
             }
             item { SectionHeader(title = "Maintenance") }

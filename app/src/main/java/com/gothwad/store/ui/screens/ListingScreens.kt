@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Whatshot
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,12 +40,14 @@ import com.gothwad.store.ui.StoreViewModel
 import com.gothwad.store.ui.UiState
 import com.gothwad.store.ui.components.AppGridCard
 import com.gothwad.store.ui.components.AppRowItem
+import com.gothwad.store.ui.components.BannerTone
 import com.gothwad.store.ui.components.AvatarAction
 import com.gothwad.store.ui.components.CategoryTile
 import com.gothwad.store.ui.components.DividerLine
 import com.gothwad.store.ui.components.DownloadsAction
 import com.gothwad.store.ui.components.EmptyState
 import com.gothwad.store.ui.components.ErrorState
+import com.gothwad.store.ui.components.InfoBanner
 import com.gothwad.store.ui.components.GothwadScaffold
 import com.gothwad.store.ui.components.GothwadTopBar
 import com.gothwad.store.ui.components.PlayChip
@@ -52,6 +56,21 @@ import com.gothwad.store.ui.components.SectionHeader
 import com.gothwad.store.ui.components.SkeletonList
 import com.gothwad.store.ui.components.rememberInstallAction
 import com.gothwad.store.ui.theme.Spacing
+
+@Composable
+private fun FdroidStatusNotice(vm: StoreViewModel, onRetry: () -> Unit) {
+    val error by vm.fdroidError.collectAsStateWithLifecycle()
+    if (error != null) {
+        InfoBanner(
+            title = "F-Droid catalogue unavailable",
+            message = error.orEmpty(),
+            tone = BannerTone.Warning,
+            action = {
+                TextButton(onClick = onRetry) { Text("Retry") }
+            },
+        )
+    }
+}
 
 @Composable
 fun AppsScreen(vm: StoreViewModel, nav: NavController) {
@@ -77,6 +96,7 @@ fun AppsScreen(vm: StoreViewModel, nav: NavController) {
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
+            FdroidStatusNotice(vm, onRetry = { vm.refreshApps() })
             LazyRow(
                 contentPadding = PaddingValues(horizontal = Spacing.screenH, vertical = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -133,6 +153,7 @@ fun GamesScreen(vm: StoreViewModel, nav: NavController) {
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
+            FdroidStatusNotice(vm, onRetry = vm::refreshGames)
             when (val current = state) {
                 UiState.Loading -> SkeletonList(rows = 7)
                 is UiState.Failed -> ErrorState(current.message, onRetry = { vm.refreshGames() })

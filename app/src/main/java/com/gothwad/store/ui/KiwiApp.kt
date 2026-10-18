@@ -54,6 +54,9 @@ fun KiwiApp() {
         // init block; asking again here would only duplicate the traffic.
         vm.refreshApps()
         vm.refreshGames()
+        // The optional F-Droid catalogue is downloaded in the background and
+        // shows up as its own shelf once it arrives.
+        vm.loadFdroid()
     }
 
     val startDestination = when {
