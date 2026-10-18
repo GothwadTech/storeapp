@@ -1,17 +1,24 @@
 name: Release Kiwi Store to GitHub Releases
+
+# Same behaviour as GothwadTech/browser and GothwadTech/launcher: a `v*` tag
+# publishes a signed release. Every push to main already publishes one through
+# build_apk.yml, so this workflow is only needed for a manual, tag driven
+# release.
 on:
   push:
     tags: ['v*']
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version name (required for manual release)'
+        description: 'Version name (required for a manual release)'
         type: string
         required: true
       version_code:
         description: 'Version code, higher than any previously distributed build'
         type: string
-        required: true
+        required: false
+        default: ''
+
 permissions:
   contents: write
 jobs:
@@ -19,19 +26,27 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       name: ${{ steps.resolve.outputs.name }}
+      code: ${{ steps.resolve.outputs.code }}
     steps:
       - id: resolve
         env:
           VERSION_NAME: ${{ inputs.version }}
+          VERSION_CODE: ${{ inputs.version_code }}
         run: |
+          set -euo pipefail
           value="${VERSION_NAME:-${GITHUB_REF_NAME#v}}"
           [[ "$value" =~ ^[0-9][0-9A-Za-z.+_-]{0,63}$ ]] || exit 1
           echo "name=$value" >> "$GITHUB_OUTPUT"
+          if [[ -n "${VERSION_CODE:-}" ]]; then
+            echo "code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=" >> "$GITHUB_OUTPUT"
+          fi
   build_release:
     needs: version
     uses: ./.github/workflows/build_apk.yml
     with:
       version_name: ${{ needs.version.outputs.name }}
-      version_code: ${{ inputs.version_code }}
+      version_code: ${{ needs.version.outputs.code }}
       publish_release: true
     secrets: inherit

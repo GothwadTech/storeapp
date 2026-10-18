@@ -156,17 +156,35 @@ class LibraryRepository(
         }
     }
 
+    /**
+     * Adds or removes an app from the wishlist.
+     *
+     * The local list is updated first so the UI reacts immediately, and the
+     * server copy is synced afterwards. A failing sync rolls the local list
+     * back instead of throwing into the caller's coroutine.
+     */
     suspend fun toggleWishlist(appId: String): Boolean {
         val current = _state.value.wishlist
         val adding = appId !in current
-        if (auth.isSignedIn) {
-            if (adding) repository.addWishlist(appId) else repository.removeWishlist(appId)
-        }
         mutex.withLock {
             _state.update {
                 it.copy(wishlist = if (adding) it.wishlist + appId else it.wishlist - appId)
             }
             persist()
+        }
+        if (auth.isSignedIn) {
+            val synced = runCatching {
+                if (adding) repository.addWishlist(appId) else repository.removeWishlist(appId)
+            }.isSuccess
+            if (!synced) {
+                mutex.withLock {
+                    _state.update {
+                        it.copy(wishlist = if (adding) it.wishlist - appId else it.wishlist + appId)
+                    }
+                    persist()
+                }
+                return !adding
+            }
         }
         return adding
     }

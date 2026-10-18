@@ -87,13 +87,15 @@ class StoreRepository(
         }
         val ids = candidates.mapTo(mutableSetOf()) { it.id }
         return gothwad.copy(
-            apps = gothwad.apps + candidates,
+            // Distinct by id: the UI uses the id as the list key, so a listing
+            // that appears twice would crash the list.
+            apps = (gothwad.apps + candidates).distinctBy { it.id },
             releases = gothwad.releases + external.releases.filter { it.appId in ids },
         )
     }
 
     private fun CatalogResponse.published(): CatalogResponse = copy(
-        apps = apps.filter { it.status == "published" },
+        apps = apps.filter { it.status == "published" }.distinctBy { it.id },
     )
 
     /** Cheap reachability probe used by the diagnostics screen and CI smoke tests. */

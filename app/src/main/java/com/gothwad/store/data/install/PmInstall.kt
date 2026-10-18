@@ -68,13 +68,13 @@ object PmInstall {
                 }
                 val finished = process.awaitExit(TIMEOUT_SECONDS)
                 if (!finished) {
-                    process.destroy()
+                    process.terminate()
                     return@withContext ShellResult(-1, output.toString(), "The root installer timed out.")
                 }
                 reader.join(2_000)
                 ShellResult(process.exitValue(), output.toString(), "")
             } catch (error: Throwable) {
-                runCatching { process.destroy() }
+                runCatching { process.terminate() }
                 ShellResult(-1, output.toString(), error.message ?: "Root install failed.")
             }
         }

@@ -67,7 +67,11 @@ fun SearchScreen(vm: StoreViewModel, nav: NavController) {
             SearchTopBar(
                 query = query,
                 onQueryChange = { query = it },
-                onBack = { nav.navigate(Routes.HOME) },
+                onBack = {
+                    // Go back to wherever the user came from instead of
+                    // stacking a second Home entry on the back stack.
+                    if (!nav.popBackStack()) nav.navigate(Routes.HOME)
+                },
                 onSubmit = { term ->
                     if (term.isNotBlank()) {
                         query = term

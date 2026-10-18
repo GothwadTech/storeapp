@@ -50,8 +50,8 @@ fun KiwiApp() {
         AppGraph.library.load()
         AppGraph.downloads.load()
         AppGraph.installer.refreshCapabilities()
-        vm.refreshHome()
-        vm.refreshCategories()
+        // Home and the categories are already requested by the ViewModel's
+        // init block; asking again here would only duplicate the traffic.
         vm.refreshApps()
         vm.refreshGames()
     }

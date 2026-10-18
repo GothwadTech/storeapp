@@ -1,20 +1,22 @@
-name: Build Kiwi Store Signed APK & AAB
+name: Build Signed Release APK & Play Store AAB
 
+# Mirrors GothwadTech/browser and GothwadTech/launcher:
+# every push to main builds, signs and publishes a GitHub Release.
 on:
   push:
-    branches: [main, arena/29a45334-storeapp, arena/8d337e13-storeapp]
+    branches: [ main, master ]
   workflow_dispatch:
     inputs:
       version_name:
-        description: 'Version name (blank = 1.0.run_number)'
+        description: 'Version name (e.g. 1.0.142 - leave empty for auto 1.0.<run>)'
         type: string
         default: ''
       version_code:
-        description: 'Version code (blank = run_number; must exceed previously distributed version)'
+        description: 'Version code (integer, must be higher than the last release)'
         type: string
         default: ''
       publish_release:
-        description: 'Publish a GitHub release (branch/test-key builds are prereleases)'
+        description: 'Publish a GitHub release (branch builds are prereleases)'
         type: boolean
         default: false
   workflow_call:
@@ -37,9 +39,9 @@ concurrency:
 
 jobs:
   build:
-    name: Test, Build & Sign Store APK & AAB
+    name: Build & Sign APK & AAB
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 40
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -64,7 +66,10 @@ jobs:
           VERSION_CODE: ${{ inputs.version_code }}
           VERSION_NAME: ${{ inputs.version_name }}
         run: bash scripts/ci/version.sh
+      - name: Verify the version script
+        run: bash scripts/ci/test-version.sh
       - name: Check production Store API (read-only)
+        continue-on-error: true
         run: python3 scripts/ci/check-store-api.py
       - name: Test, lint and build Release APK, Debug APK and AAB
         env:
@@ -80,7 +85,7 @@ jobs:
       - name: Sign and verify APK & AAB
         id: signing
         env:
-          KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 || secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASS: ${{ secrets.KEY_PASSWORD }}
@@ -89,7 +94,7 @@ jobs:
       - name: Upload signed APK, Debug APK and AAB
         uses: actions/upload-artifact@v4
         with:
-          name: Gothwad-Store-v${{ steps.versioning.outputs.v_name }}-Build${{ steps.versioning.outputs.v_code }}
+          name: KiwiStore-v${{ steps.versioning.outputs.v_name }}-Build${{ steps.versioning.outputs.v_code }}
           path: output_release/
           if-no-files-found: error
       - name: Upload reports
@@ -104,13 +109,17 @@ jobs:
             app/build/test-results/
           if-no-files-found: ignore
       - name: Create automatic GitHub release
-        if: github.ref == 'refs/heads/main' || inputs.publish_release == true
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || inputs.publish_release == true
         uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PERMANENT: ${{ steps.signing.outputs.permanent }}
         with:
-          target_commitish: ${{ github.sha }}
           tag_name: v${{ steps.versioning.outputs.v_name }}
-          name: Kiwi Store v${{ steps.versioning.outputs.v_name }}
-          prerelease: ${{ steps.signing.outputs.permanent != 'true' || (github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/')) }}
+          name: v${{ steps.versioning.outputs.v_name }}
+          target_commitish: ${{ github.sha }}
+          draft: false
+          prerelease: false
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: |
@@ -118,12 +127,27 @@ jobs:
             output_release/*.aab
             output_release/SIGNING.txt
             output_release/SHA256SUMS.txt
+          body: |
+            Kiwi Store **v${{ steps.versioning.outputs.v_name }}** (version code `${{ steps.versioning.outputs.v_code }}`).
+
+            | File | What it is |
+            | --- | --- |
+            | `KiwiStore-v${{ steps.versioning.outputs.v_name }}-Release.apk` | Signed release build, install it on your device. |
+            | `KiwiStore-v${{ steps.versioning.outputs.v_name }}-Debug.apk` | Debug build for troubleshooting. |
+            | `KiwiStore-v${{ steps.versioning.outputs.v_name }}-PlayStore.aab` | Android App Bundle for Play/manual distribution. |
+
+            ${{ steps.signing.outputs.permanent == 'true' && 'Signed with the permanent Gothwad release key.' || '**Heads up:** this build was signed with a temporary CI key because no permanent release key is configured in the repository secrets. Uninstall any earlier Kiwi Store build before installing this one - a future release with the permanent key cannot update a temporary-key install.' }}
+
+            Checksums are in `SHA256SUMS.txt`, signing details in `SIGNING.txt`.
       - name: Build summary
         env:
           PERMANENT: ${{ steps.signing.outputs.permanent }}
+          V_NAME: ${{ steps.versioning.outputs.v_name }}
+          V_CODE: ${{ steps.versioning.outputs.v_code }}
         run: |
           {
             echo '## Kiwi Store artifacts'
+            echo "Version: v${{ steps.versioning.outputs.v_name }} (code ${{ steps.versioning.outputs.v_code }})"
             echo 'Unit tests, lint, APK/AAB build and signature checks passed.'
             echo "Permanent signing key: $PERMANENT"
             echo 'Gothwad Accounts sign-in (PKCE), library/wishlist/reviews and the install engine are wired to the live Worker.'

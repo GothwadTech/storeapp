@@ -452,7 +452,9 @@ fun ShizukuScreen(vm: StoreViewModel, nav: NavController) {
                         onClick = {
                             val launch = context.packageManager.getLaunchIntentForPackage("moe.shizuku.privileged.api")
                             if (launch != null) {
-                                context.startActivity(launch.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+                                runCatching {
+                                    context.startActivity(launch.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+                                }
                             } else {
                                 runCatching {
                                     context.startActivity(
@@ -535,8 +537,10 @@ fun RootScreen(vm: StoreViewModel, nav: NavController) {
                             listOf("com.topjohnwu.magisk", "me.weishu.kernelsu", "eu.chainfire.supersu").forEach { pkg ->
                                 val intent = context.packageManager.getLaunchIntentForPackage(pkg)
                                 if (intent != null) {
-                                    context.startActivity(intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
-                                    return@SettingRow
+                                    val opened = runCatching {
+                                        context.startActivity(intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+                                    }.isSuccess
+                                    if (opened) return@SettingRow
                                 }
                             }
                             vm.emit(StoreEvent.Message("No root manager app was found."))

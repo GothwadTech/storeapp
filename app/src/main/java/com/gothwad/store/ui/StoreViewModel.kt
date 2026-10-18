@@ -391,11 +391,9 @@ class StoreViewModel : ViewModel() {
 
     private fun Throwable.toUiState(): UiState.Failed {
         val message = message?.takeIf { it.isNotBlank() } ?: "Could not load Kiwi Store."
-        return UiState.Failed(message, this !is StoreException || isRetryable())
+        val retryable = this !is StoreException || (this as StoreException).isRetryable
+        return UiState.Failed(message, retryable)
     }
-
-    private fun Throwable.isRetryable(): Boolean =
-        this is StoreException && isRetryable
 }
 
 /** Network helpers, kept out of the ViewModel so they can be unit tested. */
