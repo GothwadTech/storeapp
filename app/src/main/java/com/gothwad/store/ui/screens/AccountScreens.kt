@@ -75,6 +75,7 @@ import com.gothwad.store.ui.components.KeyValueRow
 import com.gothwad.store.ui.components.OutlineButton
 import com.gothwad.store.ui.components.PillLabel
 import com.gothwad.store.ui.components.PrimaryButton
+import com.gothwad.store.ui.components.SearchAction
 import com.gothwad.store.ui.components.SectionHeader
 import com.gothwad.store.ui.components.SettingRow
 import com.gothwad.store.ui.components.SettingsGroup
@@ -107,6 +108,7 @@ fun AccountScreen(vm: StoreViewModel, nav: NavController) {
                 title = "Profile",
                 showBrandMark = true,
                 actions = {
+                    SearchAction { nav.navigate(Routes.SEARCH) }
                     DownloadsAction { nav.navigate(Routes.DOWNLOADS) }
                     IconButton(onClick = { nav.navigate(Routes.SETTINGS) }) {
                         Icon(

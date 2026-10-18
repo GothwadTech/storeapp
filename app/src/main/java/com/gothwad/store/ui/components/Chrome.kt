@@ -36,12 +36,13 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.SportsEsports
+import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -279,7 +280,7 @@ private data class TabSpec(
 private val TAB_SPECS = listOf(
     TabSpec(Routes.HOME, "Home", Icons.Filled.Home, Icons.Outlined.Home),
     TabSpec(Routes.APPS, "Apps", Icons.Filled.Apps, Icons.Outlined.Apps),
-    TabSpec(Routes.SEARCH, "Search", Icons.Filled.Search, Icons.Outlined.Search),
+    TabSpec(Routes.KIWI, "Kiwi", Icons.Filled.Storefront, Icons.Outlined.Storefront),
     TabSpec(Routes.GAMES, "Games", Icons.Filled.SportsEsports, Icons.Outlined.SportsEsports),
     TabSpec(Routes.ACCOUNT, "Profile", Icons.Filled.Person, Icons.Outlined.Person),
 )

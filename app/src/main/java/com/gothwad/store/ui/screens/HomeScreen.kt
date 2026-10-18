@@ -65,6 +65,7 @@ import com.gothwad.store.ui.components.GothwadScaffold
 import com.gothwad.store.ui.components.InfoBanner
 import com.gothwad.store.ui.components.GothwadTopBar
 import com.gothwad.store.ui.components.PlayChip
+import com.gothwad.store.ui.components.SearchAction
 import com.gothwad.store.ui.components.SectionHeader
 import com.gothwad.store.ui.components.SkeletonList
 import com.gothwad.store.ui.components.SmallAppCard
@@ -90,6 +91,7 @@ fun HomeScreen(vm: StoreViewModel, nav: NavController) {
                 title = "Kiwi Store",
                 showBrandMark = true,
                 actions = {
+                    SearchAction { nav.navigate(Routes.SEARCH) }
                     DownloadsAction { nav.navigate(Routes.DOWNLOADS) }
                     AvatarAction { nav.navigate(Routes.ACCOUNT) }
                 },

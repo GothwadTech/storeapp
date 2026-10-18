@@ -10,6 +10,12 @@ The app never connects directly to Supabase and includes no backend credentials.
 
 ## Current implementation
 
+- Bottom tabs: **Home | Apps | Kiwi | Games | Profile**. The **Kiwi** tab lists
+  exactly the apps that are live on the Kiwi Store web
+  ([kiwistore.gothwadtech.com](https://kiwistore.gothwadtech.com/)) — it reads
+  the Worker catalogue only, so no upstream mirror ever leaks into it.
+- Search is not a tab any more: every tab header carries a search action that
+  opens the search screen, and no tab header shows a search bar.
 - Live published apps and games from the Worker, with category filters.
 - F-Droid's public repository index is merged into Home, Apps, and Search; Gothwad listings win when the same package is present in both sources. F-Droid metadata is cached in memory for six hours.
 - F-Droid APKs download directly from F-Droid through the existing foreground download/install flow; they are not proxied, hosted, or counted by Gothwad. A compact “From F-Droid” attribution is shown on list and detail screens.

@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.Text
@@ -51,6 +52,7 @@ import com.gothwad.store.ui.components.InfoBanner
 import com.gothwad.store.ui.components.GothwadScaffold
 import com.gothwad.store.ui.components.GothwadTopBar
 import com.gothwad.store.ui.components.PlayChip
+import com.gothwad.store.ui.components.SearchAction
 import com.gothwad.store.ui.components.SegmentedRow
 import com.gothwad.store.ui.components.SectionHeader
 import com.gothwad.store.ui.components.SkeletonList
@@ -92,6 +94,7 @@ fun AppsScreen(vm: StoreViewModel, nav: NavController) {
                 title = "Apps",
                 showBrandMark = true,
                 actions = {
+                    SearchAction { nav.navigate(Routes.SEARCH) }
                     DownloadsAction { nav.navigate(Routes.DOWNLOADS) }
                     AvatarAction { nav.navigate(Routes.ACCOUNT) }
                 },
@@ -135,6 +138,100 @@ fun AppsScreen(vm: StoreViewModel, nav: NavController) {
     }
 }
 
+/**
+ * The Kiwi tab: everything that is live on the Kiwi Store web
+ * (kiwistore.gothwadtech.com), listed exactly like the Apps tab.
+ *
+ * The optional upstream catalogue (F-Droid) is not part of the web store, so
+ * it never shows up here — the Worker catalogue is the single source.
+ */
+@Composable
+fun KiwiScreen(vm: StoreViewModel, nav: NavController) {
+    val state by vm.kiwi.collectAsStateWithLifecycle()
+    val releases by vm.releases.collectAsStateWithLifecycle()
+    var kindFilter by rememberSaveable { mutableIntStateOf(0) }
+    val filters = listOf("All", "Apps", "Games")
+
+    LaunchedEffect(Unit) {
+        if (state is UiState.Ready && (state as UiState.Ready).value.apps.isEmpty()) vm.refreshKiwi()
+    }
+
+    GothwadScaffold(
+        topBar = {
+            GothwadTopBar(
+                title = "Kiwi",
+                subtitle = "Live on kiwistore.gothwadtech.com",
+                showBrandMark = true,
+                actions = {
+                    SearchAction { nav.navigate(Routes.SEARCH) }
+                    DownloadsAction { nav.navigate(Routes.DOWNLOADS) }
+                    AvatarAction { nav.navigate(Routes.ACCOUNT) }
+                },
+            )
+        },
+    ) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = Spacing.screenH, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(filters.indices.toList()) { index ->
+                    PlayChip(
+                        label = filters[index],
+                        selected = kindFilter == index,
+                        onClick = { kindFilter = index },
+                    )
+                }
+            }
+            when (val current = state) {
+                UiState.Loading -> SkeletonList(rows = 7)
+                is UiState.Failed -> ErrorState(current.message, onRetry = { vm.refreshKiwi() })
+                is UiState.Ready -> {
+                    val apps = current.value.apps
+                        .filter { app -> app.isKiwiStoreListing }
+                        .let { all ->
+                            when (kindFilter) {
+                                1 -> all.filterNot { it.isGame }
+                                2 -> all.filter { it.isGame }
+                                else -> all
+                            }
+                        }
+                    if (apps.isEmpty()) {
+                        EmptyState(
+                            title = "Nothing on the Kiwi Store web yet",
+                            message = "Apps show up here as soon as a developer publishes them on " +
+                                "kiwistore.gothwadtech.com.",
+                            icon = Icons.Filled.Storefront,
+                            actionLabel = "Open Developer Console",
+                            onAction = { nav.navigate(Routes.DEVELOPER_CONSOLE) },
+                        )
+                    } else {
+                        LazyColumn(contentPadding = PaddingValues(bottom = Spacing.bottomContentPadding)) {
+                            item {
+                                SectionHeader(
+                                    title = "On the Kiwi Store web",
+                                    subtitle = "${apps.size} app${if (apps.size == 1) "" else "s"}",
+                                )
+                            }
+                            itemsIndexed(apps, key = { _, app -> app.id }) { index, app ->
+                                Column {
+                                    if (index > 0) DividerLine(startIndent = 64.dp)
+                                    AppRowItem(
+                                        app = app,
+                                        release = releases[app.id],
+                                        onOpen = { nav.navigate(Routes.app(app.id)) },
+                                        onAction = { vm.onAppAction(app) },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun GamesScreen(vm: StoreViewModel, nav: NavController) {
     val state by vm.games.collectAsStateWithLifecycle()
@@ -149,6 +246,7 @@ fun GamesScreen(vm: StoreViewModel, nav: NavController) {
                 title = "Games",
                 showBrandMark = true,
                 actions = {
+                    SearchAction { nav.navigate(Routes.SEARCH) }
                     DownloadsAction { nav.navigate(Routes.DOWNLOADS) }
                     AvatarAction { nav.navigate(Routes.ACCOUNT) }
                 },
@@ -280,7 +378,7 @@ fun CategoriesScreen(vm: StoreViewModel, nav: NavController) {
                 title = "Categories",
                 onBack = { nav.popBackStack() },
                 actions = {
-                    com.gothwad.store.ui.components.SearchAction { nav.navigate(Routes.SEARCH) }
+                    SearchAction { nav.navigate(Routes.SEARCH) }
                 },
             )
         },

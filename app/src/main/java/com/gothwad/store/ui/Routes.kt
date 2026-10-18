@@ -7,11 +7,23 @@ object Routes {
     // Bottom navigation tabs
     const val HOME = "home"
     const val APPS = "apps"
-    const val SEARCH = "search"
+
+    /**
+     * The Kiwi tab: the listings that are live on the Kiwi Store web
+     * (kiwistore.gothwadtech.com) — nothing else.
+     */
+    const val KIWI = "kiwi"
     const val GAMES = "games"
     const val ACCOUNT = "account"
 
-    val tabs = listOf(HOME, APPS, SEARCH, GAMES, ACCOUNT)
+    /**
+     * Search is not a tab any more. Every tab header carries a search action
+     * that opens this destination, so there is no separate search tab and no
+     * search bar in the tab headers.
+     */
+    const val SEARCH = "search"
+
+    val tabs = listOf(HOME, APPS, KIWI, GAMES, ACCOUNT)
 
     // Catalogue
     const val CHARTS = "charts/{kind}"

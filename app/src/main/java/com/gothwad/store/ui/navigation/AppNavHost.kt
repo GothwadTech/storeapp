@@ -50,6 +50,7 @@ import com.gothwad.store.ui.screens.InstallHelpScreen
 import com.gothwad.store.ui.screens.InstallMethodScreen
 import com.gothwad.store.ui.screens.InstallPermissionScreen
 import com.gothwad.store.ui.screens.InstallSettingsScreen
+import com.gothwad.store.ui.screens.KiwiScreen
 import com.gothwad.store.ui.screens.LegalScreen
 import com.gothwad.store.ui.screens.LicensesScreen
 import com.gothwad.store.ui.screens.MyAppsScreen
@@ -74,8 +75,9 @@ import com.gothwad.store.ui.screens.WriteReviewScreen
 
 /**
  * One NavHost for the whole app. The five tab destinations (Home, Apps,
- * Search, Games, Profile) render the shared bottom bar; every other
- * destination is pushed as a sub-screen with a back arrow.
+ * Kiwi, Games, Profile) render the shared bottom bar; every other
+ * destination — including the search screen, which the tab headers open — is
+ * pushed as a sub-screen with a back arrow.
  */
 @Composable
 fun AppNavHost(
@@ -88,9 +90,9 @@ fun AppNavHost(
     val currentRoute = backStackEntry?.destination?.route.orEmpty()
 
     val onTab: (String) -> Unit = { route ->
-        // Every tab (Search included) is a top-level destination, so they all
-        // use the same save/restore rules. Search used to be special-cased and
-        // was not wrapped in TabShell, which is why it had no bottom bar.
+        // Every tab is a top-level destination, so they all use the same
+        // save/restore rules. Search is not a tab any more: the tab headers
+        // push it as a normal sub-screen.
         navController.navigate(route) {
             popUpTo(Routes.HOME) { saveState = true }
             launchSingleTop = true
@@ -118,14 +120,19 @@ fun AppNavHost(
             composable(Routes.APPS) {
                 TabShell(currentRoute, onTab, snackbarHostState) { AppsScreen(vm, navController) }
             }
+            composable(Routes.KIWI) {
+                TabShell(currentRoute, onTab, snackbarHostState) { KiwiScreen(vm, navController) }
+            }
             composable(Routes.GAMES) {
                 TabShell(currentRoute, onTab, snackbarHostState) { GamesScreen(vm, navController) }
             }
             composable(Routes.ACCOUNT) {
                 TabShell(currentRoute, onTab, snackbarHostState) { AccountScreen(vm, navController) }
             }
+            // Search is not a tab any more — every tab header opens it, so it
+            // is pushed as a sub-screen (no bottom bar, back arrow returns).
             composable(Routes.SEARCH) {
-                TabShell(currentRoute, onTab, snackbarHostState) { SearchScreen(vm, navController) }
+                SearchScreen(vm, navController)
             }
 
             // ── Catalogue ───────────────────────────────────────────────────

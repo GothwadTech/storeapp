@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -50,8 +51,9 @@ import com.gothwad.store.ui.theme.GothwadTheme
 import com.gothwad.store.ui.theme.Spacing
 
 /**
- * Search is a bottom-tab destination, so it uses the shared [GothwadScaffold]:
- * the tab bar stays visible while the search field and results scroll.
+ * Search is not a tab any more: it is opened from the search action in every
+ * tab header and pushed as a sub-screen, so the back arrow returns to the tab
+ * the user came from.
  *
  * Idle screen order (top → bottom): recent searches, five suggested apps, then
  * "Recently viewed" at the very bottom — exactly the Play-style stacking.
@@ -91,7 +93,9 @@ fun SearchScreen(vm: StoreViewModel, nav: NavController) {
             )
         },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) {
+        // The tab bar is gone on this screen, so the list has to keep clear of
+        // the system navigation bar itself.
+        Column(Modifier.fillMaxSize().padding(padding).navigationBarsPadding()) {
             if (query.isBlank()) {
                 val catalogue = when (val state = home) {
                     is UiState.Ready -> state.value.apps
