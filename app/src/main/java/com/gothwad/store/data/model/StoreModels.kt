@@ -36,6 +36,15 @@ data class StoreApp(
 ) {
     val isGame: Boolean get() = kind == "game"
     val hasRating: Boolean get() = ratingCount > 0
+
+    /**
+     * True for the listings that are published on the Kiwi Store web
+     * (kiwistore.gothwadtech.com). F-Droid and other upstream mirrors carry a
+     * `fdroid:` id and are not part of the web store, so the Kiwi tab skips
+     * them.
+     */
+    val isKiwiStoreListing: Boolean
+        get() = !id.startsWith("fdroid:") && !source.equals("F-Droid", ignoreCase = true)
 }
 
 data class StoreRelease(

@@ -53,17 +53,15 @@ import com.gothwad.store.ui.UiState
 import com.gothwad.store.ui.components.AppGridCard
 import com.gothwad.store.ui.components.AppRowItem
 import com.gothwad.store.ui.components.BannerTone
-import com.gothwad.store.ui.components.AvatarAction
 import com.gothwad.store.ui.components.BannerCard
 import com.gothwad.store.ui.components.CategoryTile
 import com.gothwad.store.ui.components.DividerLine
-import com.gothwad.store.ui.components.DownloadsAction
 import com.gothwad.store.ui.components.EmptyState
 import com.gothwad.store.ui.components.ErrorState
 import com.gothwad.store.ui.components.GameCard
 import com.gothwad.store.ui.components.GothwadScaffold
+import com.gothwad.store.ui.components.KiwiStoreTopBar
 import com.gothwad.store.ui.components.InfoBanner
-import com.gothwad.store.ui.components.GothwadTopBar
 import com.gothwad.store.ui.components.PlayChip
 import com.gothwad.store.ui.components.SectionHeader
 import com.gothwad.store.ui.components.SkeletonList
@@ -86,13 +84,12 @@ fun HomeScreen(vm: StoreViewModel, nav: NavController) {
 
     GothwadScaffold(
         topBar = {
-            GothwadTopBar(
-                title = "Kiwi Store",
-                showBrandMark = true,
-                actions = {
-                    DownloadsAction { nav.navigate(Routes.DOWNLOADS) }
-                    AvatarAction { nav.navigate(Routes.ACCOUNT) }
-                },
+            // Every tab shares the very same header: Kiwi Store icon, search
+            // field, profile avatar.
+            KiwiStoreTopBar(
+                onSearch = { nav.navigate(Routes.SEARCH) },
+                onProfile = { nav.navigate(Routes.ACCOUNT) },
+                onLogo = { nav.navigate(Routes.HOME) { launchSingleTop = true } },
             )
         },
     ) { padding ->

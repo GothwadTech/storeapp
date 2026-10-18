@@ -3,10 +3,13 @@
 > **App Name:** Kiwi Store
 > **Look:** EXACTLY like Google Play Store (2024 new UI)
 > **Brand colour:** sky blue `#0494F4` (the `#01875F` green values below are historical — take colours from `ui/theme/Color.kt`).
-> **Tabs (5):** Home | Apps | Search | Games | Profile
-> **Top Bar Rule:**
->   - Home, Apps, Games, Profile → "Kiwi Store" title (bold, 20sp, #202124) + Profile avatar (32dp green circle, white "G") on right. NO search bar.
->   - Search tab → ONLY clean search bar (pill shape, grey bg, back arrow, text input, mic icon). No title, no avatar.
+> **Tabs (5):** Home | Apps | Kiwi | Games | Profile
+> **Top Bar Rule (ONE header for all 5 tabs):**
+>   - Left: Kiwi Store icon (launcher logo, 28dp). Centre: search field (pill, grey bg, magnifier + "Search apps & games", tap → search screen). Right: Profile avatar (32dp, white "G").
+>   - No per-tab titles, no separate search bar per tab, no Search tab.
+>   - Search screen → clean search bar (pill shape, grey bg, back arrow, text input, mic icon). No title, no avatar.
+>   - Kiwi tab → the apps that are live on the Kiwi Store web, in the Apps-tab list form (no F-Droid / upstream mirrors).
+> **Settings:** "App sources" shows the Kiwi web catalogue, the F-Droid / IzzyOnDroid repos (URL, index size, listing counts, last sync, mirrors), the download counters and what is running right now.
 > **Data Source:** ONLY Aptoide API (https://ws75.aptoide.com/api/7/). No F-Droid, no backend, no Supabase, no Firebase.
 > **Status:** Phase 1 & 2 already DONE. Continue from Phase 3.
 

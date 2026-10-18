@@ -34,6 +34,47 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
+ * What the app knows about one upstream repository: which repo it is, how big
+ * its index is, how many apps/releases it carries and when it was last
+ * synced. Shown in Settings so the user can see exactly what is mirrored.
+ */
+data class FdroidRepoStatus(
+    val name: String,
+    val repoUrl: String,
+    val indexUrl: String,
+    val apps: Int = 0,
+    val releases: Int = 0,
+    val indexBytes: Long = 0L,
+    val lastSyncedAt: Long = 0L,
+    val syncing: Boolean = false,
+    val error: String? = null,
+)
+
+/**
+ * Live status of the optional upstream catalogue (F-Droid + IzzyOnDroid).
+ */
+data class FdroidStatus(
+    val fdroid: FdroidRepoStatus = FdroidRepoStatus(
+        name = "F-Droid",
+        repoUrl = FdroidCatalog.REPO_URL,
+        indexUrl = FdroidCatalog.INDEX_URL,
+    ),
+    val izzy: FdroidRepoStatus = FdroidRepoStatus(
+        name = "IzzyOnDroid",
+        repoUrl = FdroidCatalog.IZZY_REPO_URL,
+        indexUrl = FdroidCatalog.IZZY_INDEX_URL,
+    ),
+    val mirrors: List<String> = FdroidCatalog.FDROID_MIRRORS,
+    val lastError: String? = null,
+) {
+    val repos: List<FdroidRepoStatus> get() = listOf(fdroid, izzy)
+    val totalApps: Int get() = fdroid.apps + izzy.apps
+    val totalReleases: Int get() = fdroid.releases + izzy.releases
+    val totalIndexBytes: Long get() = fdroid.indexBytes + izzy.indexBytes
+    val syncing: Boolean get() = fdroid.syncing || izzy.syncing
+}
+
+/**
  * Read-only client for F-Droid's public repository index (and IzzyOnDroid, the
  * standard companion F-Droid repository bundled in Droid-ify). APK bytes stay
  * on F-Droid / IzzyOnDroid; only the metadata is mirrored into the app.
@@ -95,6 +136,19 @@ class FdroidCatalog(
      * by IzzyOnDroid, or updated by the full F-Droid repository.
      */
     val catalogFlow: StateFlow<CatalogResponse?> = _catalogFlow.asStateFlow()
+
+    private val _status = MutableStateFlow(FdroidStatus())
+
+    /**
+     * Live status of both upstream repositories: sizes, sync times, mirrors
+     * and the current error. Settings shows this so the user can see what the
+     * app is actually running on.
+     */
+    val status: StateFlow<FdroidStatus> = _status.asStateFlow()
+
+    private fun updateStatus(transform: (FdroidStatus) -> FdroidStatus) {
+        _status.value = transform(_status.value)
+    }
 
     private val effectiveCacheDir: File by lazy {
         val dir = cacheDir ?: File(System.getProperty("java.io.tmpdir", "/tmp"), "kiwistore-fdroid")
@@ -184,6 +238,25 @@ class FdroidCatalog(
         if (diskFdroid != null) fdroidCached = diskFdroid
         if (diskIzzy != null) izzyCached = diskIzzy
 
+        // The disk cache is a catalogue in its own right: report it right away
+        // so Settings shows the repo sizes even before a fresh sync finishes.
+        updateStatus { current ->
+            current.copy(
+                fdroid = current.fdroid.copy(
+                    apps = fdroidCached?.apps?.size ?: 0,
+                    releases = fdroidCached?.releases?.size ?: 0,
+                    indexBytes = fdroidDiskFile.takeIf { it.exists() }?.length() ?: 0L,
+                    lastSyncedAt = fdroidDiskFile.takeIf { it.exists() }?.lastModified() ?: 0L,
+                ),
+                izzy = current.izzy.copy(
+                    apps = izzyCached?.apps?.size ?: 0,
+                    releases = izzyCached?.releases?.size ?: 0,
+                    indexBytes = izzyDiskFile.takeIf { it.exists() }?.length() ?: 0L,
+                    lastSyncedAt = izzyDiskFile.takeIf { it.exists() }?.lastModified() ?: 0L,
+                ),
+            )
+        }
+
         val merged = mergeCatalogs(fdroidCached, izzyCached)
         if (merged.apps.isNotEmpty()) {
             cached = merged
@@ -195,6 +268,7 @@ class FdroidCatalog(
                 else -> izzyMod
             }
             _lastError.value = null
+            updateStatus { current -> current.copy(lastError = null) }
             _catalogFlow.value = merged
             Log.i(TAG, "Loaded ${merged.apps.size} F-Droid apps from disk cache.")
         }
@@ -211,6 +285,15 @@ class FdroidCatalog(
             val firstReady = CompletableDeferred<CatalogResponse>()
             activeSyncDeferred = firstReady
 
+            // Both repositories are about to be fetched: say so in the status
+            // so Settings can show that a sync is running.
+            updateStatus { current ->
+                current.copy(
+                    fdroid = current.fdroid.copy(syncing = true, error = null),
+                    izzy = current.izzy.copy(syncing = true, error = null),
+                )
+            }
+
             catalogScope.launch {
                 val errors = mutableListOf<String>()
                 try {
@@ -223,6 +306,10 @@ class FdroidCatalog(
                                 .onFailure { e ->
                                     if (e is CancellationException) throw e
                                     Log.w(TAG, "IzzyOnDroid sync failed: ${e.message}")
+                                    val reason = e.message ?: e::class.java.simpleName
+                                    updateStatus { current ->
+                                        current.copy(izzy = current.izzy.copy(syncing = false, error = reason))
+                                    }
                                     synchronized(errors) {
                                         errors += "IzzyOnDroid: ${e.message ?: e::class.java.simpleName}"
                                     }
@@ -237,6 +324,10 @@ class FdroidCatalog(
                                 .onFailure { e ->
                                     if (e is CancellationException) throw e
                                     Log.e(TAG, "Official F-Droid sync failed across mirrors: ${e.message}", e)
+                                    val reason = e.message ?: e::class.java.simpleName
+                                    updateStatus { current ->
+                                        current.copy(fdroid = current.fdroid.copy(syncing = false, error = reason))
+                                    }
                                     synchronized(errors) {
                                         errors += "F-Droid: ${e.message ?: e::class.java.simpleName}"
                                     }
@@ -251,6 +342,7 @@ class FdroidCatalog(
                     if (finalCatalog != null && finalCatalog.apps.isNotEmpty()) {
                         cachedAt = System.currentTimeMillis()
                         _lastError.value = null
+                        updateStatus { current -> current.copy(lastError = null) }
                         if (!firstReady.isCompleted) {
                             firstReady.complete(finalCatalog)
                         }
@@ -259,6 +351,7 @@ class FdroidCatalog(
                             errors.joinToString(" | ").ifBlank { "F-Droid is unavailable right now." }
                         }
                         _lastError.value = combinedMessage
+                        updateStatus { current -> current.copy(lastError = combinedMessage) }
                         if (!firstReady.isCompleted) {
                             firstReady.completeExceptionally(IOException(combinedMessage))
                         }
@@ -267,6 +360,7 @@ class FdroidCatalog(
                     if (e !is CancellationException) {
                         val msg = e.message ?: "F-Droid is unavailable right now."
                         _lastError.value = msg
+                        updateStatus { current -> current.copy(lastError = msg) }
                         if (!firstReady.isCompleted) {
                             firstReady.completeExceptionally(e)
                         }
@@ -276,6 +370,13 @@ class FdroidCatalog(
                         if (activeSyncDeferred === firstReady) {
                             activeSyncDeferred = null
                         }
+                    }
+                    // Nothing is being fetched any more.
+                    updateStatus { current ->
+                        current.copy(
+                            fdroid = current.fdroid.copy(syncing = false),
+                            izzy = current.izzy.copy(syncing = false),
+                        )
                     }
                 }
             }
@@ -291,15 +392,40 @@ class FdroidCatalog(
         stateMutex.withLock {
             if (newFdroid != null && newFdroid.apps.isNotEmpty()) {
                 fdroidCached = newFdroid
+                updateStatus { current ->
+                    current.copy(
+                        fdroid = current.fdroid.copy(
+                            apps = newFdroid.apps.size,
+                            releases = newFdroid.releases.size,
+                            indexBytes = fdroidDiskFile.takeIf { it.exists() }?.length() ?: 0L,
+                            lastSyncedAt = System.currentTimeMillis(),
+                            syncing = false,
+                            error = null,
+                        ),
+                    )
+                }
             }
             if (newIzzy != null && newIzzy.apps.isNotEmpty()) {
                 izzyCached = newIzzy
+                updateStatus { current ->
+                    current.copy(
+                        izzy = current.izzy.copy(
+                            apps = newIzzy.apps.size,
+                            releases = newIzzy.releases.size,
+                            indexBytes = izzyDiskFile.takeIf { it.exists() }?.length() ?: 0L,
+                            lastSyncedAt = System.currentTimeMillis(),
+                            syncing = false,
+                            error = null,
+                        ),
+                    )
+                }
             }
             val merged = mergeCatalogs(fdroidCached, izzyCached)
             if (merged.apps.isNotEmpty()) {
                 cached = merged
                 cachedAt = System.currentTimeMillis()
                 _lastError.value = null
+                updateStatus { current -> current.copy(lastError = null) }
                 _catalogFlow.value = merged
                 if (!firstReady.isCompleted) {
                     firstReady.complete(merged)

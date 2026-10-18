@@ -54,6 +54,8 @@ fun KiwiApp() {
         // init block; asking again here would only duplicate the traffic.
         vm.refreshApps()
         vm.refreshGames()
+        // The Kiwi tab is the web store: only the Worker catalogue, no F-Droid.
+        vm.refreshKiwi()
         // The optional F-Droid catalogue is downloaded in the background and
         // shows up as its own shelf once it arrives.
         vm.loadFdroid()

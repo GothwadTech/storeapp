@@ -15,6 +15,7 @@ import com.gothwad.store.data.model.CatalogResponse
 import com.gothwad.store.data.model.StoreApp
 import com.gothwad.store.data.model.StoreCategory
 import com.gothwad.store.data.model.StoreRelease
+import com.gothwad.store.data.remote.FdroidStatus
 import com.gothwad.store.data.remote.StoreException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -62,6 +63,14 @@ class StoreViewModel : ViewModel() {
     private val _apps = MutableStateFlow<UiState<CatalogBundle>>(UiState.Loading)
     val apps: StateFlow<UiState<CatalogBundle>> = _apps.asStateFlow()
 
+    /**
+     * The Kiwi tab: the listings that are live on the Kiwi Store web. The
+     * optional upstream catalogue (F-Droid) is deliberately *not* merged in
+     * here — the Kiwi tab is the web store, nothing else.
+     */
+    private val _kiwi = MutableStateFlow<UiState<CatalogBundle>>(UiState.Loading)
+    val kiwi: StateFlow<UiState<CatalogBundle>> = _kiwi.asStateFlow()
+
     private val _games = MutableStateFlow<UiState<CatalogBundle>>(UiState.Loading)
     val games: StateFlow<UiState<CatalogBundle>> = _games.asStateFlow()
 
@@ -102,6 +111,12 @@ class StoreViewModel : ViewModel() {
     /** Why the F-Droid catalogue is missing, if it is. */
     val fdroidError: StateFlow<String?> = repository.fdroidError
 
+    /**
+     * Live status of the upstream catalogue (F-Droid + IzzyOnDroid): repo
+     * sizes, sync times and what is running right now. Settings shows it.
+     */
+    val fdroidStatus: StateFlow<FdroidStatus> = repository.fdroidStatus
+
     val downloads: StateFlow<List<DownloadTask>> = downloader.tasks
     val installPhases: StateFlow<Map<String, InstallPhase>> = installer.phases
 
@@ -120,6 +135,7 @@ class StoreViewModel : ViewModel() {
 
     private var homeJob: Job? = null
     private var appsJob: Job? = null
+    private var kiwiJob: Job? = null
     private var gamesJob: Job? = null
     private var chartsJob: Job? = null
     private var detailJob: Job? = null
@@ -233,6 +249,22 @@ class StoreViewModel : ViewModel() {
                 merged = { repository.withFdroid(it, kind, category) },
                 publish = { _apps.value = it },
             )
+        }
+    }
+
+    /**
+     * Loads the listings published on the Kiwi Store web. Only the Worker
+     * catalogue is used here — no F-Droid, no upstream mirrors — so the Kiwi
+     * tab shows exactly what the website shows.
+     */
+    fun refreshKiwi() {
+        kiwiJob?.cancel()
+        kiwiJob = viewModelScope.launch {
+            if (_kiwi.value !is UiState.Ready) _kiwi.value = UiState.Loading
+            _kiwi.value = load {
+                val response = repository.firstPartyCatalog(null, null, "")
+                response.copy(apps = response.apps.filter { app -> app.isKiwiStoreListing })
+            }
         }
     }
 

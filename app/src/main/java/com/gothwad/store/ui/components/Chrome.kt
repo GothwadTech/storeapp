@@ -1,6 +1,7 @@
 package com.gothwad.store.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,12 +37,13 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.SportsEsports
+import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -61,12 +63,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gothwad.store.R
 import com.gothwad.store.ui.Routes
 import com.gothwad.store.ui.theme.GothwadTheme
 
@@ -175,6 +179,72 @@ fun GothwadTopBar(
     }
 }
 
+/**
+ * The one Kiwi Store header. Every tab uses the very same bar: the Kiwi Store
+ * icon on the left, the search field in the middle and the profile avatar on
+ * the right — the way the Play Store does it. Tapping the search field opens
+ * the search screen, the avatar opens the profile.
+ */
+@Composable
+fun KiwiStoreTopBar(
+    onSearch: () -> Unit,
+    onProfile: () -> Unit,
+    onLogo: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .statusBarsPadding(),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Image(
+                painter = painterResource(R.mipmap.ic_launcher),
+                contentDescription = "Kiwi Store",
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(onClick = onLogo),
+            )
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(GothwadTheme.extra.searchBar)
+                    .clickable(onClick = onSearch)
+                    .padding(horizontal = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Filled.Search,
+                    contentDescription = null,
+                    tint = GothwadTheme.extra.textSecondary,
+                    modifier = Modifier.size(19.dp),
+                )
+                Text(
+                    "Search apps & games",
+                    color = GothwadTheme.extra.textTertiary,
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(start = 10.dp),
+                )
+            }
+            AvatarAction(onProfile)
+        }
+        DividerLine()
+    }
+}
+
 /** Search-tab top bar: pill search field with back, clear and voice actions. */
 @Composable
 fun SearchTopBar(
@@ -279,7 +349,7 @@ private data class TabSpec(
 private val TAB_SPECS = listOf(
     TabSpec(Routes.HOME, "Home", Icons.Filled.Home, Icons.Outlined.Home),
     TabSpec(Routes.APPS, "Apps", Icons.Filled.Apps, Icons.Outlined.Apps),
-    TabSpec(Routes.SEARCH, "Search", Icons.Filled.Search, Icons.Outlined.Search),
+    TabSpec(Routes.KIWI, "Kiwi", Icons.Filled.Storefront, Icons.Outlined.Storefront),
     TabSpec(Routes.GAMES, "Games", Icons.Filled.SportsEsports, Icons.Outlined.SportsEsports),
     TabSpec(Routes.ACCOUNT, "Profile", Icons.Filled.Person, Icons.Outlined.Person),
 )

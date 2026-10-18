@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.Text
@@ -41,7 +42,6 @@ import com.gothwad.store.ui.UiState
 import com.gothwad.store.ui.components.AppGridCard
 import com.gothwad.store.ui.components.AppRowItem
 import com.gothwad.store.ui.components.BannerTone
-import com.gothwad.store.ui.components.AvatarAction
 import com.gothwad.store.ui.components.CategoryTile
 import com.gothwad.store.ui.components.DividerLine
 import com.gothwad.store.ui.components.DownloadsAction
@@ -49,8 +49,10 @@ import com.gothwad.store.ui.components.EmptyState
 import com.gothwad.store.ui.components.ErrorState
 import com.gothwad.store.ui.components.InfoBanner
 import com.gothwad.store.ui.components.GothwadScaffold
+import com.gothwad.store.ui.components.KiwiStoreTopBar
 import com.gothwad.store.ui.components.GothwadTopBar
 import com.gothwad.store.ui.components.PlayChip
+import com.gothwad.store.ui.components.SearchAction
 import com.gothwad.store.ui.components.SegmentedRow
 import com.gothwad.store.ui.components.SectionHeader
 import com.gothwad.store.ui.components.SkeletonList
@@ -88,13 +90,12 @@ fun AppsScreen(vm: StoreViewModel, nav: NavController) {
 
     GothwadScaffold(
         topBar = {
-            GothwadTopBar(
-                title = "Apps",
-                showBrandMark = true,
-                actions = {
-                    DownloadsAction { nav.navigate(Routes.DOWNLOADS) }
-                    AvatarAction { nav.navigate(Routes.ACCOUNT) }
-                },
+            // Every tab shares the very same header: Kiwi Store icon, search
+            // field, profile avatar.
+            KiwiStoreTopBar(
+                onSearch = { nav.navigate(Routes.SEARCH) },
+                onProfile = { nav.navigate(Routes.ACCOUNT) },
+                onLogo = { nav.navigate(Routes.HOME) { launchSingleTop = true } },
             )
         },
     ) { padding ->
@@ -129,7 +130,99 @@ fun AppsScreen(vm: StoreViewModel, nav: NavController) {
                     vm = vm,
                     nav = nav,
                     emptyTitle = "No apps published yet",
+                    headerTitle = "Apps",
                 )
+            }
+        }
+    }
+}
+
+/**
+ * The Kiwi tab: everything that is live on the Kiwi Store web
+ * (kiwistore.gothwadtech.com), listed exactly like the Apps tab.
+ *
+ * The optional upstream catalogue (F-Droid) is not part of the web store, so
+ * it never shows up here — the Worker catalogue is the single source.
+ */
+@Composable
+fun KiwiScreen(vm: StoreViewModel, nav: NavController) {
+    val state by vm.kiwi.collectAsStateWithLifecycle()
+    val releases by vm.releases.collectAsStateWithLifecycle()
+    var kindFilter by rememberSaveable { mutableIntStateOf(0) }
+    val filters = listOf("All", "Apps", "Games")
+
+    LaunchedEffect(Unit) {
+        if (state is UiState.Ready && (state as UiState.Ready).value.apps.isEmpty()) vm.refreshKiwi()
+    }
+
+    GothwadScaffold(
+        topBar = {
+            // Every tab shares the very same header: Kiwi Store icon, search
+            // field, profile avatar.
+            KiwiStoreTopBar(
+                onSearch = { nav.navigate(Routes.SEARCH) },
+                onProfile = { nav.navigate(Routes.ACCOUNT) },
+                onLogo = { nav.navigate(Routes.HOME) { launchSingleTop = true } },
+            )
+        },
+    ) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = Spacing.screenH, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(filters.indices.toList()) { index ->
+                    PlayChip(
+                        label = filters[index],
+                        selected = kindFilter == index,
+                        onClick = { kindFilter = index },
+                    )
+                }
+            }
+            when (val current = state) {
+                UiState.Loading -> SkeletonList(rows = 7)
+                is UiState.Failed -> ErrorState(current.message, onRetry = { vm.refreshKiwi() })
+                is UiState.Ready -> {
+                    val apps = current.value.apps
+                        .filter { app -> app.isKiwiStoreListing }
+                        .let { all ->
+                            when (kindFilter) {
+                                1 -> all.filterNot { it.isGame }
+                                2 -> all.filter { it.isGame }
+                                else -> all
+                            }
+                        }
+                    if (apps.isEmpty()) {
+                        EmptyState(
+                            title = "Nothing on the Kiwi Store web yet",
+                            message = "Apps show up here as soon as a developer publishes them on " +
+                                "kiwistore.gothwadtech.com.",
+                            icon = Icons.Filled.Storefront,
+                            actionLabel = "Open Developer Console",
+                            onAction = { nav.navigate(Routes.DEVELOPER_CONSOLE) },
+                        )
+                    } else {
+                        LazyColumn(contentPadding = PaddingValues(bottom = Spacing.bottomContentPadding)) {
+                            item {
+                                SectionHeader(
+                                    title = "On the Kiwi Store web",
+                                    subtitle = "${apps.size} app${if (apps.size == 1) "" else "s"}",
+                                )
+                            }
+                            itemsIndexed(apps, key = { _, app -> app.id }) { index, app ->
+                                Column {
+                                    if (index > 0) DividerLine(startIndent = 64.dp)
+                                    AppRowItem(
+                                        app = app,
+                                        release = releases[app.id],
+                                        onOpen = { nav.navigate(Routes.app(app.id)) },
+                                        onAction = { vm.onAppAction(app) },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -145,13 +238,12 @@ fun GamesScreen(vm: StoreViewModel, nav: NavController) {
 
     GothwadScaffold(
         topBar = {
-            GothwadTopBar(
-                title = "Games",
-                showBrandMark = true,
-                actions = {
-                    DownloadsAction { nav.navigate(Routes.DOWNLOADS) }
-                    AvatarAction { nav.navigate(Routes.ACCOUNT) }
-                },
+            // Every tab shares the very same header: Kiwi Store icon, search
+            // field, profile avatar.
+            KiwiStoreTopBar(
+                onSearch = { nav.navigate(Routes.SEARCH) },
+                onProfile = { nav.navigate(Routes.ACCOUNT) },
+                onLogo = { nav.navigate(Routes.HOME) { launchSingleTop = true } },
             )
         },
     ) { padding ->
@@ -168,6 +260,7 @@ fun GamesScreen(vm: StoreViewModel, nav: NavController) {
                     emptyTitle = "No games published yet",
                     emptyMessage = "Games appear here as soon as a developer publishes one from the " +
                         "Gothwad Developer Console.",
+                    headerTitle = "Games",
                 )
             }
         }
@@ -182,6 +275,7 @@ private fun AppList(
     nav: NavController,
     emptyTitle: String,
     emptyMessage: String = "Nothing is published in this section yet.",
+    headerTitle: String? = null,
 ) {
     if (apps.isEmpty()) {
         EmptyState(
@@ -194,6 +288,14 @@ private fun AppList(
         return
     }
     LazyColumn(contentPadding = PaddingValues(bottom = Spacing.bottomContentPadding)) {
+        if (headerTitle != null) {
+            item {
+                SectionHeader(
+                    title = headerTitle,
+                    subtitle = "${apps.size} listing${if (apps.size == 1) "" else "s"}",
+                )
+            }
+        }
         itemsIndexed(apps, key = { _, app -> app.id }) { index, app ->
             Column {
                 if (index > 0) DividerLine(startIndent = 64.dp)
@@ -280,7 +382,7 @@ fun CategoriesScreen(vm: StoreViewModel, nav: NavController) {
                 title = "Categories",
                 onBack = { nav.popBackStack() },
                 actions = {
-                    com.gothwad.store.ui.components.SearchAction { nav.navigate(Routes.SEARCH) }
+                    SearchAction { nav.navigate(Routes.SEARCH) }
                 },
             )
         },
