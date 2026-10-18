@@ -73,8 +73,9 @@ import com.gothwad.store.ui.screens.WishlistScreen
 import com.gothwad.store.ui.screens.WriteReviewScreen
 
 /**
- * One NavHost for the whole app. The four tab destinations render the shared
- * Play-style bottom bar; every other destination is pushed with a back arrow.
+ * One NavHost for the whole app. The five tab destinations (Home, Apps,
+ * Search, Games, Profile) render the shared bottom bar; every other
+ * destination is pushed as a sub-screen with a back arrow.
  */
 @Composable
 fun AppNavHost(
@@ -87,14 +88,13 @@ fun AppNavHost(
     val currentRoute = backStackEntry?.destination?.route.orEmpty()
 
     val onTab: (String) -> Unit = { route ->
-        if (route == Routes.SEARCH) {
-            navController.navigate(Routes.SEARCH) { launchSingleTop = true }
-        } else {
-            navController.navigate(route) {
-                popUpTo(Routes.HOME) { saveState = true }
-                launchSingleTop = true
-                restoreState = true
-            }
+        // Every tab (Search included) is a top-level destination, so they all
+        // use the same save/restore rules. Search used to be special-cased and
+        // was not wrapped in TabShell, which is why it had no bottom bar.
+        navController.navigate(route) {
+            popUpTo(Routes.HOME) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
         }
     }
 
@@ -124,7 +124,9 @@ fun AppNavHost(
             composable(Routes.ACCOUNT) {
                 TabShell(currentRoute, onTab, snackbarHostState) { AccountScreen(vm, navController) }
             }
-            composable(Routes.SEARCH) { SearchScreen(vm, navController) }
+            composable(Routes.SEARCH) {
+                TabShell(currentRoute, onTab, snackbarHostState) { SearchScreen(vm, navController) }
+            }
 
             // ── Catalogue ───────────────────────────────────────────────────
             composable(

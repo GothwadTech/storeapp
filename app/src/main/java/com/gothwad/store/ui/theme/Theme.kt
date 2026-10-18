@@ -13,10 +13,10 @@ import androidx.compose.ui.graphics.Color
 import com.gothwad.store.data.settings.ThemeMode
 
 private val LightScheme = lightColorScheme(
-    primary = PlayColors.Green,
-    onPrimary = PlayColors.OnGreen,
-    primaryContainer = PlayColors.GreenLight,
-    onPrimaryContainer = PlayColors.GreenInk,
+    primary = PlayColors.Brand,
+    onPrimary = PlayColors.OnBrand,
+    primaryContainer = PlayColors.BrandLight,
+    onPrimaryContainer = PlayColors.BrandInk,
     secondary = PlayColors.Blue,
     onSecondary = Color.White,
     secondaryContainer = PlayColors.BlueLight,
@@ -40,10 +40,10 @@ private val LightScheme = lightColorScheme(
 )
 
 private val DarkScheme = darkColorScheme(
-    primary = PlayColorsDark.Green,
-    onPrimary = Color(0xFF00331F),
-    primaryContainer = PlayColorsDark.GreenContainer,
-    onPrimaryContainer = PlayColorsDark.GreenInk,
+    primary = PlayColorsDark.Brand,
+    onPrimary = Color(0xFF00344F),
+    primaryContainer = PlayColorsDark.BrandContainer,
+    onPrimaryContainer = PlayColorsDark.BrandInk,
     secondary = Color(0xFF8AB4F8),
     onSecondary = Color(0xFF0B2B52),
     secondaryContainer = Color(0xFF1D3A5F),
@@ -85,7 +85,7 @@ data class GothwadExtraColors(
     val chipBorder: Color,
     val bannerStart: Color,
     val bannerEnd: Color,
-    val greenInk: Color,
+    val brandInk: Color,
 )
 
 val LocalExtraColors: ProvidableCompositionLocal<GothwadExtraColors> =
@@ -106,7 +106,7 @@ private val LightExtraColors = GothwadExtraColors(
     chipBorder = PlayColors.ChipBorder,
     bannerStart = PlayColors.BannerStart,
     bannerEnd = PlayColors.BannerEnd,
-    greenInk = PlayColors.GreenInk,
+    brandInk = PlayColors.BrandInk,
 )
 
 private val DarkExtraColors = GothwadExtraColors(
@@ -124,7 +124,7 @@ private val DarkExtraColors = GothwadExtraColors(
     chipBorder = PlayColorsDark.ChipBorder,
     bannerStart = PlayColorsDark.BannerStart,
     bannerEnd = PlayColorsDark.BannerEnd,
-    greenInk = PlayColorsDark.GreenInk,
+    brandInk = PlayColorsDark.BrandInk,
 )
 
 object GothwadTheme {
