@@ -1,5 +1,6 @@
 package com.gothwad.store.data.remote
 
+import android.util.Log
 import com.gothwad.store.data.model.ApiErrorBody
 import com.gothwad.store.data.model.CatalogResponse
 import com.gothwad.store.data.model.AppDetailResponse
@@ -13,6 +14,7 @@ import com.gothwad.store.data.model.StoreRelease
 import com.gothwad.store.data.model.StoreReview
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody
@@ -33,25 +35,61 @@ class StoreRepository(
     private val fdroid: FdroidCatalog = FdroidCatalog(),
 ) {
 
-    suspend fun catalog(kind: String?, category: String?, query: String): CatalogResponse {
+    /**
+     * Why the optional F-Droid catalogue is missing, if it is. Null means the
+     * catalogue loaded fine.
+     */
+    val fdroidError: StateFlow<String?> = fdroid.lastError
+
+    /**
+     * The Kiwi Store catalogue only.
+     *
+     * Split out from [catalog] so the UI can show first-party listings right
+     * away and add the F-Droid catalogue once its (large) index has been
+     * downloaded — waiting for ~8 MB before rendering anything leaves the
+     * user staring at a spinner.
+     */
+    suspend fun firstPartyCatalog(kind: String?, category: String?, query: String): CatalogResponse {
         val trimmed = query.trim()
         val response = call {
             if (trimmed.isNotEmpty()) api.search(trimmed, kind) else api.apps(kind, category)
         }
         assertConfigured(response.source)
-        return combine(response.published(), trimmed, kind, category)
+        return response.published()
+    }
+
+    /** The Kiwi Store home bundle, without the optional upstream catalogue. */
+    suspend fun firstPartyHome(kind: String?): CatalogResponse {
+        val response = call { api.home(kind) }
+        assertConfigured(response.source)
+        return response.published()
+    }
+
+    /** Adds the optional F-Droid catalogue to an already loaded response. */
+    suspend fun withFdroid(
+        base: CatalogResponse,
+        kind: String?,
+        category: String?,
+        query: String = "",
+    ): CatalogResponse = combine(base, query.trim(), kind, category)
+
+    /** The optional F-Droid catalogue on its own. */
+    suspend fun fdroidCatalog(): CatalogResponse = fdroid.catalog()
+
+    suspend fun catalog(kind: String?, category: String?, query: String): CatalogResponse {
+        val base = firstPartyCatalog(kind, category, query)
+        return combine(base, query.trim(), kind, category)
+    }
+
+    suspend fun home(kind: String?): CatalogResponse {
+        val base = firstPartyHome(kind)
+        return combine(base, "", kind, null)
     }
 
     suspend fun charts(kind: String?): CatalogResponse {
         val response = call { api.charts(kind) }
         assertConfigured(response.source)
         return response.published()
-    }
-
-    suspend fun home(kind: String?): CatalogResponse {
-        val response = call { api.home(kind) }
-        assertConfigured(response.source)
-        return combine(response.published(), "", null, null)
     }
 
     /**
@@ -75,13 +113,13 @@ class StoreRepository(
         category: String?,
     ): CatalogResponse {
         // The first-party catalogue remains usable if the optional upstream is unavailable.
-        val external = runCatching { fdroid.catalog() }.getOrNull() ?: return gothwad
+        val external = loadFdroid() ?: return gothwad
         val ownedPackages = gothwad.apps.mapTo(mutableSetOf()) { it.packageName }
         val q = query.trim().lowercase()
         val candidates = external.apps.filter { app ->
             app.packageName !in ownedPackages &&
-                (kind.isNullOrBlank() || kind == "app" || kind == "both") &&
-                (category.isNullOrBlank() || app.category.equals(category, ignoreCase = true)) &&
+                kindMatches(app, kind) &&
+                categoryMatches(app, category) &&
                 (q.isEmpty() || app.name.contains(q, true) || app.packageName.contains(q, true) ||
                     app.shortDesc.contains(q, true) || app.developerName.contains(q, true))
         }
@@ -92,6 +130,36 @@ class StoreRepository(
             apps = (gothwad.apps + candidates).distinctBy { it.id },
             releases = gothwad.releases + external.releases.filter { it.appId in ids },
         )
+    }
+
+    /** F-Droid keeps games in a category and everything else in "app". */
+    private fun kindMatches(app: StoreApp, kind: String?): Boolean =
+        when (kind?.trim()?.lowercase()) {
+            null, "", "both" -> true
+            "app" -> app.kind == "app"
+            "game" -> app.kind == "game"
+            else -> true
+        }
+
+    /** Both catalogues use Kiwi Store slugs, so a plain comparison is enough. */
+    private fun categoryMatches(app: StoreApp, category: String?): Boolean {
+        val wanted = category?.trim().orEmpty()
+        if (wanted.isEmpty()) return true
+        return app.category.equals(wanted, ignoreCase = true)
+    }
+
+    /**
+     * F-Droid is optional: a failure must never break the Kiwi catalogue, but
+     * it must not be silent either — the reason stays visible on the
+     * diagnostics screen instead of vanishing.
+     */
+    private suspend fun loadFdroid(): CatalogResponse? = try {
+        fdroid.catalog()
+    } catch (cancellation: CancellationException) {
+        throw cancellation
+    } catch (error: Exception) {
+        Log.w(TAG, "F-Droid catalogue unavailable: ${error.message}", error)
+        null
     }
 
     private fun CatalogResponse.published(): CatalogResponse = copy(
@@ -198,6 +266,10 @@ class StoreRepository(
             in 500..599 -> StoreException(serverMessage ?: "Kiwi Store is having trouble. Try again shortly.", StoreException.Kind.SERVER, code)
             else -> StoreException(serverMessage ?: "The Store request failed ($code).", StoreException.Kind.SERVER, code)
         }
+    }
+
+    private companion object {
+        const val TAG = "StoreRepository"
     }
 }
 

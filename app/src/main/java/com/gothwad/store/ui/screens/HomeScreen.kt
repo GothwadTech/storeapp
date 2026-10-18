@@ -34,7 +34,9 @@ import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -50,6 +52,7 @@ import com.gothwad.store.ui.StoreViewModel
 import com.gothwad.store.ui.UiState
 import com.gothwad.store.ui.components.AppGridCard
 import com.gothwad.store.ui.components.AppRowItem
+import com.gothwad.store.ui.components.BannerTone
 import com.gothwad.store.ui.components.AvatarAction
 import com.gothwad.store.ui.components.BannerCard
 import com.gothwad.store.ui.components.CategoryTile
@@ -59,6 +62,7 @@ import com.gothwad.store.ui.components.EmptyState
 import com.gothwad.store.ui.components.ErrorState
 import com.gothwad.store.ui.components.GameCard
 import com.gothwad.store.ui.components.GothwadScaffold
+import com.gothwad.store.ui.components.InfoBanner
 import com.gothwad.store.ui.components.GothwadTopBar
 import com.gothwad.store.ui.components.PlayChip
 import com.gothwad.store.ui.components.SectionHeader
@@ -75,6 +79,10 @@ fun HomeScreen(vm: StoreViewModel, nav: NavController) {
     val state by vm.home.collectAsStateWithLifecycle()
     val releases by vm.releases.collectAsStateWithLifecycle()
     val categories by vm.categories.collectAsStateWithLifecycle()
+    val fdroidApps by vm.fdroid.collectAsStateWithLifecycle()
+    val fdroidError by vm.fdroidError.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) { vm.loadFdroid() }
 
     GothwadScaffold(
         topBar = {
@@ -99,6 +107,8 @@ fun HomeScreen(vm: StoreViewModel, nav: NavController) {
                 vm = vm,
                 nav = nav,
                 releases = releases,
+                fdroidApps = fdroidApps.apps,
+                fdroidError = fdroidError,
                 bottomPadding = padding.calculateBottomPadding(),
             )
         }
@@ -112,11 +122,23 @@ private fun HomeContent(
     vm: StoreViewModel,
     nav: NavController,
     releases: Map<String, StoreRelease>,
+    fdroidApps: List<StoreApp>,
+    fdroidError: String?,
     bottomPadding: androidx.compose.ui.unit.Dp,
 ) {
     val apps = bundle.apps
-    if (apps.isEmpty()) {
+    if (apps.isEmpty() && fdroidApps.isEmpty()) {
         Column(Modifier.fillMaxWidth()) {
+            fdroidError?.let { error ->
+                InfoBanner(
+                    title = "F-Droid catalogue unavailable",
+                    message = error,
+                    tone = BannerTone.Warning,
+                    action = {
+                        TextButton(onClick = vm::loadFdroid) { Text("Retry") }
+                    },
+                )
+            }
             EmptyState(
                 title = "Nothing published yet",
                 message = "Kiwi Store is connected to the live catalogue, but no app or game has " +
@@ -134,11 +156,25 @@ private fun HomeContent(
     val suggested = (nonGames + games).take(12)
     val trending = apps.sortedByDescending { it.downloadsCount }.take(5)
     val topFree = nonGames.ifEmpty { apps }.sortedByDescending { it.downloadsCount }.take(9)
+    val firstPartyPackages = apps.mapTo(mutableSetOf()) { it.packageName }
+    val fdroidPicks = fdroidApps.filterNot { it.packageName in firstPartyPackages }.take(12)
 
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding + Spacing.bottomContentPadding),
     ) {
+        if (fdroidError != null) {
+            item {
+                InfoBanner(
+                    title = "F-Droid catalogue unavailable",
+                    message = fdroidError,
+                    tone = BannerTone.Warning,
+                    action = {
+                        TextButton(onClick = vm::loadFdroid) { Text("Retry") }
+                    },
+                )
+            }
+        }
         item {
             BannerCard(
                 title = "New & updated",
@@ -176,6 +212,32 @@ private fun HomeContent(
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     items(suggested, key = { "suggested-${it.id}" }) { app ->
+                        val action = rememberInstallAction(app, releases[app.id])
+                        SmallAppCard(
+                            app = app,
+                            action = action,
+                            onClick = { nav.navigate(Routes.app(app.id)) },
+                            onActionClick = { vm.onAppAction(app) },
+                        )
+                    }
+                }
+            }
+        }
+
+        if (fdroidPicks.isNotEmpty()) {
+            item {
+                SectionHeader(
+                    title = "Open-source picks",
+                    subtitle = "Free and open-source apps from F-Droid",
+                    onSeeAll = { nav.navigate(Routes.APPS) },
+                )
+            }
+            item {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = Spacing.screenH),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    items(fdroidPicks, key = { "fdroid-${it.id}" }) { app ->
                         val action = rememberInstallAction(app, releases[app.id])
                         SmallAppCard(
                             app = app,
