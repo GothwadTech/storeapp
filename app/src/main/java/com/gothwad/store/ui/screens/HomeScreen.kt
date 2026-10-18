@@ -79,7 +79,7 @@ fun HomeScreen(vm: StoreViewModel, nav: NavController) {
     GothwadScaffold(
         topBar = {
             GothwadTopBar(
-                title = "Gothwad Store",
+                title = "Kiwi Store",
                 showBrandMark = true,
                 actions = {
                     DownloadsAction { nav.navigate(Routes.DOWNLOADS) }
@@ -119,7 +119,7 @@ private fun HomeContent(
         Column(Modifier.fillMaxWidth()) {
             EmptyState(
                 title = "Nothing published yet",
-                message = "Gothwad Store is connected to the live catalogue, but no app or game has " +
+                message = "Kiwi Store is connected to the live catalogue, but no app or game has " +
                     "been published in it yet. Developers publish from the Gothwad Developer Console.",
                 icon = Icons.Filled.Storefront,
                 actionLabel = "Open Developer Console",

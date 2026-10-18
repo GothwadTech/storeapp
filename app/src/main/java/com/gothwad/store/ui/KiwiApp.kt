@@ -39,7 +39,7 @@ import com.gothwad.store.ui.navigation.AppNavHost
  * everywhere and survives navigation.
  */
 @Composable
-fun GothwadApp() {
+fun KiwiApp() {
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
     val vm: StoreViewModel = viewModel()
@@ -64,7 +64,7 @@ fun GothwadApp() {
 
     CompositionLocalProvider(LocalAppSnackbarHost provides snackbarHostState) {
         if (!bootstrapped) {
-            LoadingState(label = "Starting Gothwad Store…")
+            LoadingState(label = "Starting Kiwi Store…")
             return@CompositionLocalProvider
         }
         Box(Modifier.fillMaxSize()) {
@@ -128,7 +128,7 @@ private fun EventPump(
                 navController.navigate(Routes.SIGN_IN)
             }
             StoreEvent.NeedsInstallPermission -> {
-                snackbarHostState.showSnackbar("Gothwad Store needs permission to install apps.")
+                snackbarHostState.showSnackbar("Kiwi Store needs permission to install apps.")
                 vm.consumeEvent()
                 navController.navigate(Routes.INSTALL_PERMISSION)
             }

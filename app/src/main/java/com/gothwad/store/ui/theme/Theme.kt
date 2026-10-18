@@ -133,7 +133,7 @@ object GothwadTheme {
 }
 
 @Composable
-fun GothwadStoreTheme(
+fun KiwiStoreTheme(
     themeMode: ThemeMode = ThemeMode.System,
     content: @Composable () -> Unit,
 ) {

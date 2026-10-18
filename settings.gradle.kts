@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "Gothwad Store"
+rootProject.name = "Kiwi Store"
 
 include(":app")

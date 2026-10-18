@@ -316,7 +316,7 @@ private fun DetailContent(
                 )
                 DetailRow(
                     icon = Icons.Filled.VerifiedUser,
-                    title = if (action is InstallAction.Open) "Installed from Gothwad Store" else "Checksum verified download",
+                    title = if (action is InstallAction.Open) "Installed from Kiwi Store" else "Checksum verified download",
                     subtitle = release?.apkSha256?.take(18)?.plus("…") ?: "No published checksum",
                 )
                 DetailRow(
@@ -418,7 +418,7 @@ private fun DetailContent(
         item { DividerLine(modifier = Modifier.padding(vertical = 14.dp)) }
         item {
             Text(
-                "Published on Gothwad Store · ${Format.isoDate(app.updatedAt)}",
+                "Published on Kiwi Store · ${Format.isoDate(app.updatedAt)}",
                 modifier = Modifier.padding(horizontal = Spacing.screenH),
                 fontSize = 12.sp,
                 color = GothwadTheme.extra.textTertiary,
@@ -448,6 +448,9 @@ private fun HeaderSection(detail: AppDetailResponse, release: StoreRelease?, ins
                     color = MaterialTheme.colorScheme.primary,
                     maxLines = 1,
                 )
+                if (app.source != "Kiwi Store") {
+                    Text("From ${app.source}", fontSize = 11.sp, color = GothwadTheme.extra.textSecondary)
+                }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (app.developerVerified == true) VerifiedBadge()
                     if (app.category.isNotBlank()) TagBadge(app.category.replaceFirstChar { it.uppercase() })
@@ -605,7 +608,7 @@ private fun shareApp(app: StoreApp) {
     val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
         type = "text/plain"
         putExtra(android.content.Intent.EXTRA_SUBJECT, app.name)
-        putExtra(android.content.Intent.EXTRA_TEXT, "${app.name} on Gothwad Store: $url")
+        putExtra(android.content.Intent.EXTRA_TEXT, "${app.name} on Kiwi Store: $url")
         addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
     }
     val chooser = android.content.Intent.createChooser(intent, "Share ${app.name}")

@@ -12,4 +12,4 @@ if [[ ! "$V_NAME" =~ ^[0-9][0-9A-Za-z.+_-]{0,63}$ ]]; then
   exit 1
 fi
 printf 'v_code=%s\nv_name=%s\n' "$V_CODE" "$V_NAME" >> "${GITHUB_OUTPUT:?}"
-echo "Gothwad Store version: $V_NAME ($V_CODE)"
+echo "Kiwi Store version: $V_NAME ($V_CODE)"

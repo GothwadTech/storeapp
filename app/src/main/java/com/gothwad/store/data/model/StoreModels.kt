@@ -1,7 +1,7 @@
 package com.gothwad.store.data.model
 
 /**
- * Wire contract of the Gothwad Store Cloudflare Worker (`/api/store/...`).
+ * Wire contract of the Kiwi Store Cloudflare Worker (`/api/store/...`).
  * Field names mirror `worker/src/index.ts` exactly — do not rename casually,
  * the Android client eats the same JSON as the web storefront.
  */
@@ -31,6 +31,8 @@ data class StoreApp(
     val featured: String? = null,
     val createdAt: String = "",
     val updatedAt: String = "",
+    /** Publisher/catalogue origin, shown as a compact attribution in the UI. */
+    val source: String = "Kiwi Store",
 ) {
     val isGame: Boolean get() = kind == "game"
     val hasRating: Boolean get() = ratingCount > 0

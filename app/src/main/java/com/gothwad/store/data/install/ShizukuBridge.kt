@@ -141,7 +141,7 @@ object ShizukuBridge {
                 .getMethod("newProcess", Array<String>::class.java, Array<String>::class.java, String::class.java)
                 .invoke(service, cmd, null, null)
         }.getOrNull() ?: return@withContext ShellResult(
-            -1, "", "Shizuku refused to start a privileged process. Open Shizuku and grant Gothwad Store access.",
+            -1, "", "Shizuku refused to start a privileged process. Open Shizuku and grant Kiwi Store access.",
         )
 
         val out = StringBuilder()

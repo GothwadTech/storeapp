@@ -160,7 +160,7 @@ object DownloadNotifications {
     fun summary(context: Context, active: Int, completed: Int): Notification =
         NotificationCompat.Builder(context, CHANNEL_DOWNLOADS)
             .setSmallIcon(android.R.drawable.stat_sys_download)
-            .setContentTitle("Gothwad Store downloads")
+            .setContentTitle("Kiwi Store downloads")
             .setContentText("$active active · $completed finished")
             .setGroup("gothwad_downloads")
             .setGroupSummary(true)

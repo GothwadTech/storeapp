@@ -1,4 +1,4 @@
-name: Gothwad Store Quality Gate & Tests
+name: Kiwi Store Quality Gate & Tests
 on:
   pull_request:
   push:

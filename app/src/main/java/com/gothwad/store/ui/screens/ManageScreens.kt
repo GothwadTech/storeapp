@@ -109,7 +109,7 @@ fun MyAppsScreen(vm: StoreViewModel, nav: NavController, initialTab: String? = n
     }
 
     GothwadScaffold(
-        topBar = { GothwadTopBar(title = "Manage apps & device", subtitle = "Gothwad Store library") },
+        topBar = { GothwadTopBar(title = "Manage apps & device", subtitle = "Kiwi Store library") },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             SegmentedRow(
@@ -140,7 +140,7 @@ fun MyAppsScreen(vm: StoreViewModel, nav: NavController, initialTab: String? = n
                         item {
                             EmptyState(
                                 title = "Your library is empty",
-                                message = "Apps you install or add to your wishlist from Gothwad Store appear here.",
+                                message = "Apps you install or add to your wishlist from Kiwi Store appear here.",
                                 icon = Icons.Filled.BookmarkBorder,
                                 actionLabel = "Browse apps",
                                 onAction = { nav.navigate(Routes.APPS) },
@@ -229,7 +229,7 @@ private fun UpdatesContent(
             item {
                 InfoBanner(
                     title = "No updates waiting",
-                    message = "Gothwad Store compares the version code your device reported with the newest " +
+                    message = "Kiwi Store compares the version code your device reported with the newest " +
                         "approved release on the Worker. Updates appear here automatically.",
                     action = { OutlineButton("Open library", onClick = onOpenLibrary) },
                 )
@@ -275,7 +275,7 @@ private fun OnDeviceContent(installable: Boolean, onOpenDownloads: () -> Unit) {
                     fontSize = 15.sp,
                 )
                 Text(
-                    "Gothwad Store only reports what Android tells it about installed packages.",
+                    "Kiwi Store only reports what Android tells it about installed packages.",
                     fontSize = 12.sp,
                     color = GothwadTheme.extra.textSecondary,
                 )
@@ -415,7 +415,7 @@ fun WishlistScreen(vm: StoreViewModel, nav: NavController) {
                 item {
                     InfoBanner(
                         title = "How the wishlist syncs",
-                        message = "Gothwad Store posts to /api/store/wishlist with your Bearer token. Without a " +
+                        message = "Kiwi Store posts to /api/store/wishlist with your Bearer token. Without a " +
                             "session the list stays on this device only.",
                         action = { OutlineButton("Sync now", onClick = { scope.launch { AppGraph.library.syncRemote() } }) },
                     )

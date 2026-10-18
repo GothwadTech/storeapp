@@ -1,10 +1,10 @@
 # 🏗️ GOTHWAD STORE — Updated Build Plan (14 Phases)
 
-> **App Name:** Gothwad Store
+> **App Name:** Kiwi Store
 > **Look:** EXACTLY like Google Play Store (2024 new UI)
 > **Tabs (5):** Home | Apps | Search | Games | Profile
 > **Top Bar Rule:**
->   - Home, Apps, Games, Profile → "Gothwad Store" title (bold, 20sp, #202124) + Profile avatar (32dp green circle, white "G") on right. NO search bar.
+>   - Home, Apps, Games, Profile → "Kiwi Store" title (bold, 20sp, #202124) + Profile avatar (32dp green circle, white "G") on right. NO search bar.
 >   - Search tab → ONLY clean search bar (pill shape, grey bg, back arrow, text input, mic icon). No title, no avatar.
 > **Data Source:** ONLY Aptoide API (https://ws75.aptoide.com/api/7/). No F-Droid, no backend, no Supabase, no Firebase.
 > **Status:** Phase 1 & 2 already DONE. Continue from Phase 3.
@@ -17,7 +17,7 @@
 ---
 
 ## PHASE 3: Home Tab — Complete (Banner + Top Free + Games + Trending + Categories)
-Continue building "Gothwad Store" (Play Store 2024 clone). Phase 1 & 2 are DONE. HomeScreen already has filter chips row and "Suggested for you" carousel with dummy data. Now complete the Home tab by adding ALL remaining sections below the existing content.
+Continue building "Kiwi Store" (Play Store 2024 clone). Phase 1 & 2 are DONE. HomeScreen already has filter chips row and "Suggested for you" carousel with dummy data. Now complete the Home tab by adding ALL remaining sections below the existing content.
 
 "FEATURED BANNER" (full width, 180dp height, 12dp radius, 16dp margin):
 
@@ -76,9 +76,9 @@ Give me the COMPLETE updated HomeScreen composable with ALL sections (Phase 2 co
 ---
 
 ## PHASE 4: Apps Tab — Complete (Charts + Toggle + Categories + Category Detail)
-Continue building "Gothwad Store" (Play Store clone). Now build the COMPLETE Apps tab.
+Continue building "Kiwi Store" (Play Store clone). Now build the COMPLETE Apps tab.
 
-CONTEXT: Top bar = "Gothwad Store" + avatar. No search bar. AppsScreen is currently empty placeholder.
+CONTEXT: Top bar = "Kiwi Store" + avatar. No search bar. AppsScreen is currently empty placeholder.
 
 FILTER CHIPS ROW (top of content):
 
@@ -112,9 +112,9 @@ Give me the complete AppsScreen + CategoryDetailScreen composables.
 ---
 
 ## PHASE 5: Games Tab — Complete (Featured + Cards + Categories)
-Continue building "Gothwad Store" (Play Store clone). Build the COMPLETE Games tab.
+Continue building "Kiwi Store" (Play Store clone). Build the COMPLETE Games tab.
 
-CONTEXT: Top bar = "Gothwad Store" + avatar. No search bar. GamesScreen is empty placeholder.
+CONTEXT: Top bar = "Kiwi Store" + avatar. No search bar. GamesScreen is empty placeholder.
 
 FILTER CHIPS: "For you", "Top charts", "Premium", "Categories". Same style.
 
@@ -147,7 +147,7 @@ Give me the complete GamesScreen composable.
 ---
 
 ## PHASE 6: Universal App Detail Screen — Complete
-Continue building "Gothwad Store" (Play Store clone). Build the UNIVERSAL App Detail Screen used when ANY app is tapped from ANY tab.
+Continue building "Kiwi Store" (Play Store clone). Build the UNIVERSAL App Detail Screen used when ANY app is tapped from ANY tab.
 
 FEATURE GRAPHIC BANNER (full width, 200dp):
 
@@ -196,7 +196,7 @@ Give me the complete AppDetailScreen composable.
 ---
 
 ## PHASE 7: Search Tab — Clean Dedicated Search Experience
-Continue building "Gothwad Store" (Play Store clone). Build the Search tab.
+Continue building "Kiwi Store" (Play Store clone). Build the Search tab.
 
 CONTEXT: Search tab top bar has ONLY a search bar (back arrow + text input + mic icon). No title, no avatar. Entire tab is dedicated to search. SearchScreen is currently empty.
 
@@ -228,9 +228,9 @@ Give me the complete SearchScreen with all 3 states.
 ---
 
 ## PHASE 8: Profile Tab — User Header + Settings Menu
-Continue building "Gothwad Store" (Play Store clone). Build Profile tab.
+Continue building "Kiwi Store" (Play Store clone). Build Profile tab.
 
-CONTEXT: Top bar = "Gothwad Store" + avatar. ProfileScreen is empty placeholder.
+CONTEXT: Top bar = "Kiwi Store" + avatar. ProfileScreen is empty placeholder.
 
 USER HEADER (16dp padding):
 
@@ -254,7 +254,7 @@ Items:
 📄 "Terms of service"
 ❓ "Help & feedback"
 🚪 "Sign out" — RED text (#D93025), no chevron
-Bottom: "Gothwad Store v1.0.0" (grey, 12sp, centered).
+Bottom: "Kiwi Store v1.0.0" (grey, 12sp, centered).
 
 LazyColumn, 80dp bottom padding.
 
@@ -263,7 +263,7 @@ Give me the complete ProfileScreen composable.
 ---
 
 ## PHASE 9: Data Models + Aptoide API Network Layer
-Continue building "Gothwad Store". Now set up the data layer for Aptoide API integration. This is the ONLY data source — no F-Droid, no backend.
+Continue building "Kiwi Store". Now set up the data layer for Aptoide API integration. This is the ONLY data source — no F-Droid, no backend.
 
 APTOIDE API DETAILS:
 
@@ -316,7 +316,7 @@ Give me all data classes, Retrofit setup, API interface, repository, and base Vi
 ---
 
 ## PHASE 10: Aptoide API Integration — Fetch Real Apps
-Continue building "Gothwad Store". Now connect the Aptoide API to fetch REAL apps.
+Continue building "Kiwi Store". Now connect the Aptoide API to fetch REAL apps.
 
 CONTEXT: Phase 9 data layer is ready. Now use it to fetch real data.
 
@@ -357,7 +357,7 @@ Give me all 5 ViewModels with Aptoide API calls, caching logic, and state manage
 ---
 
 ## PHASE 11: Connect ALL Tabs to Real Aptoide Data
-Continue building "Gothwad Store". Now replace ALL dummy data in ALL screens with real Aptoide data from ViewModels.
+Continue building "Kiwi Store". Now replace ALL dummy data in ALL screens with real Aptoide data from ViewModels.
 
 TASK:
 
@@ -400,7 +400,7 @@ Give me all updated screen composables with real data binding and Coil image loa
 ---
 
 ## PHASE 12: Download & Install System
-Continue building "Gothwad Store". Build the APK download and install functionality.
+Continue building "Kiwi Store". Build the APK download and install functionality.
 
 CONTEXT: All "Install" buttons currently do nothing. Now make them download real APKs from Aptoide CDN.
 
@@ -408,7 +408,7 @@ DOWNLOAD MANAGER CLASS:
 
 Uses Android DownloadManager system service.
 Takes apkUrl from AppItem.
-Downloads to: /storage/emulated/0/Download/GothwadStore/{packageName}.apk
+Downloads to: /storage/emulated/0/Download/KiwiStore/{packageName}.apk
 System notification with progress bar.
 Progress tracking (0-100%) as StateFlow.
 Handles download completion broadcast.
@@ -416,7 +416,7 @@ INSTALL FLOW:
 
 Download complete → check REQUEST_INSTALL_PACKAGES permission.
 If granted → Intent.ACTION_VIEW with FileProvider URI, type "application/vnd.android.package-archive".
-If not granted → show dialog "Allow Gothwad Store to install apps" → opens Settings → Install Unknown Apps.
+If not granted → show dialog "Allow Kiwi Store to install apps" → opens Settings → Install Unknown Apps.
 After permission granted → auto-retry install.
 INSTALL BUTTON STATES (on ALL screens):
 
@@ -438,7 +438,7 @@ Give me DownloadManager class, InstallHelper, permission handling, and updated i
 ---
 
 ## PHASE 13: App Updates + Installed Apps Manager
-Continue building "Gothwad Store". Build app update checking and installed apps management.
+Continue building "Kiwi Store". Build app update checking and installed apps management.
 
 INSTALLED APPS DETECTION:
 
@@ -468,7 +468,7 @@ Give me InstalledAppsHelper, ManageAppsScreen, WorkManager job, and notification
 ---
 
 ## PHASE 14: Final Polish — Animations + Caching + Offline + Branding
-Continue building "Gothwad Store". FINAL phase — production quality polish.
+Continue building "Kiwi Store". FINAL phase — production quality polish.
 
 ANIMATIONS:
 
@@ -508,8 +508,8 @@ Dispatchers.IO for all network/disk.
 BRANDING:
 
 Launcher icon: Play Store triangle style with "G" center (green/blue/red/yellow).
-Splash screen: "Gothwad Store" logo + "Your Apps, Your Way" tagline (2s fade).
-About: "Gothwad Store v1.0.0 — Built with ❤️".
+Splash screen: "Kiwi Store" logo + "Your Apps, Your Way" tagline (2s fade).
+About: "Kiwi Store v1.0.0 — Built with ❤️".
 Give me all polish code: animations, Coil config, caching layer, error states, offline mode, splash screen, and launcher icon XML.
 
 ---

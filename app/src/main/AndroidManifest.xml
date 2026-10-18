@@ -41,7 +41,7 @@
     </queries>
 
     <application
-        android:name=".GothwadStoreApp"
+        android:name=".KiwiStoreApp"
         android:allowBackup="false"
         android:usesCleartextTraffic="false"
         android:dataExtractionRules="@xml/data_extraction_rules"

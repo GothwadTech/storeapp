@@ -390,7 +390,7 @@ class StoreViewModel : ViewModel() {
         )
 
     private fun Throwable.toUiState(): UiState.Failed {
-        val message = message?.takeIf { it.isNotBlank() } ?: "Could not load Gothwad Store."
+        val message = message?.takeIf { it.isNotBlank() } ?: "Could not load Kiwi Store."
         return UiState.Failed(message, this !is StoreException || isRetryable())
     }
 

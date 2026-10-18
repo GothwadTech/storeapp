@@ -34,7 +34,7 @@ class DownloadActionReceiver : BroadcastReceiver() {
                             DownloadNotifications.installResult(
                                 context,
                                 context.getString(R.string.app_name),
-                                "Open Gothwad Store and tap Install in Manage downloads.",
+                                "Open Kiwi Store and tap Install in Manage downloads.",
                             ),
                         )
                     }

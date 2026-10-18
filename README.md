@@ -1,4 +1,6 @@
-# Gothwad Store — Android
+# Kiwi Store — Android
+
+Managed by Gothwad Tech & Dark Root. The Android application ID is `com.gothwad.store` (namespace/source package: `com.gothwad.store`). This replaces the earlier `com.aistudio.gothwadstore.kzvqnp` ID: Android treats it as a separate app, so install the new Kiwi Store build alongside the old app or uninstall the old one first. App data does not migrate automatically.
 
 Native Kotlin / Jetpack Compose client for the existing
 [GothwadTech/store](https://github.com/GothwadTech/store) Cloudflare Worker.
@@ -7,6 +9,8 @@ The app never connects directly to Supabase and includes no backend credentials.
 ## Current implementation
 
 - Live published apps and games from the Worker, with category filters.
+- F-Droid's public repository index is merged into Home, Apps, and Search; Gothwad listings win when the same package is present in both sources. F-Droid metadata is cached in memory for six hours.
+- F-Droid APKs download directly from F-Droid through the existing foreground download/install flow; they are not proxied, hosted, or counted by Gothwad. A compact “From F-Droid” attribution is shown on list and detail screens.
 - Debounced server-side search, canceling superseded requests.
 - App details, screenshots, real ratings/reviews, developer replies, release
   notes, permissions and minimum-Android compatibility checks.
@@ -55,9 +59,9 @@ backend contract, device checks and next steps.
 
 ## Latest verified test APK
 
-[Download Gothwad Store v1.0.2 test build](https://github.com/GothwadTech/storeapp/actions/runs/38869108860/artifacts/12032164722)
+[Download Kiwi Store v1.0.2 test build](https://github.com/GothwadTech/storeapp/actions/runs/38869108860/artifacts/12032164722)
 from the successful [CI run](https://github.com/GothwadTech/storeapp/actions/runs/38869108860).
-Unzip and install `GothwadStore-v1.0.2-TestRelease.apk` for testing. This build is
+Unzip and install the legacy `GothwadStore-v1.0.2-TestRelease.apk` for testing. It uses the previous application ID and cannot update Kiwi Store. This build is
 signed with a temporary key, not an update-stable production key. Tests/lint/build
 and API/signature checks passed; device installation and full native account
 feature parity are not verified/complete yet.

@@ -98,7 +98,7 @@ fun InstallSettingsScreen(vm: StoreViewModel, nav: NavController) {
             item {
                 Column(Modifier.padding(Spacing.screenH)) {
                     InfoBanner(
-                        title = "Gothwad Store verifies, Android installs",
+                        title = "Kiwi Store verifies, Android installs",
                         message = "APKs are downloaded to app storage, hashed with SHA-256 and only then handed " +
                             "to the installer you choose below. Privileged methods (Shizuku/root) skip Android's " +
                             "confirmation dialog; everything else shows it.",
@@ -159,7 +159,7 @@ fun InstallSettingsScreen(vm: StoreViewModel, nav: NavController) {
                     )
                     SettingRow(
                         title = "ADB / wireless debugging",
-                        subtitle = "Install Gothwad Store over ADB or pair it with Shizuku",
+                        subtitle = "Install Kiwi Store over ADB or pair it with Shizuku",
                         onClick = { nav.navigate(Routes.INSTALL_ADB) },
                     )
                     SettingRow(
@@ -267,7 +267,7 @@ fun InstallMethodScreen(vm: StoreViewModel, nav: NavController) {
                     when (method) {
                         InstallMethod.Session, InstallMethod.Intent -> SettingRow(
                             title = "Fix install permission",
-                            subtitle = "Grant Install unknown apps to Gothwad Store",
+                            subtitle = "Grant Install unknown apps to Kiwi Store",
                             onClick = { nav.navigate(Routes.INSTALL_PERMISSION) },
                         )
                         InstallMethod.Shizuku -> SettingRow(
@@ -315,14 +315,14 @@ fun InstallPermissionScreen(vm: StoreViewModel, nav: NavController) {
             item {
                 if (capabilities.installPermissionGranted) {
                     InfoBanner(
-                        title = "Gothwad Store may install apps",
+                        title = "Kiwi Store may install apps",
                         message = "Android will still show its own confirmation dialog for every APK unless you " +
                             "use Shizuku or root.",
                     )
                 } else {
                     InfoBanner(
                         title = "Android is blocking installs",
-                        message = "Gothwad Store has to be allowed to install unknown apps. Without this the " +
+                        message = "Kiwi Store has to be allowed to install unknown apps. Without this the " +
                             "session install fails with INSTALL_FAILED_USER_RESTRICTED.",
                         tone = BannerTone.Warning,
                     )
@@ -331,7 +331,7 @@ fun InstallPermissionScreen(vm: StoreViewModel, nav: NavController) {
             item { SectionHeader(title = "How to grant it") }
             item {
                 SettingsGroup {
-                    IconTextRow(Icons.Filled.Android, "Tap “Open settings” below. Android jumps straight to the Gothwad Store entry.")
+                    IconTextRow(Icons.Filled.Android, "Tap “Open settings” below. Android jumps straight to the Kiwi Store entry.")
                     IconTextRow(Icons.Filled.Security, "Turn on “Allow from this source”.")
                     IconTextRow(Icons.Filled.VerifiedUser, "Come back here — the status refreshes automatically.")
                 }
@@ -400,7 +400,7 @@ fun ShizukuScreen(vm: StoreViewModel, nav: NavController) {
             item {
                 InfoBanner(
                     title = "Silent installs without root",
-                    message = "Shizuku runs a service with ADB (shell) identity. Gothwad Store talks to it over " +
+                    message = "Shizuku runs a service with ADB (shell) identity. Kiwi Store talks to it over " +
                         "Binder and runs pm install for you — the same thing ADB does from a computer.",
                 )
             }
@@ -427,7 +427,7 @@ fun ShizukuScreen(vm: StoreViewModel, nav: NavController) {
                 SettingsGroup {
                     IconTextRow(Icons.Filled.Android, "1. If Shizuku is missing, install it from shizuku.rikka.app (or add Sui through Magisk/KernelSU).")
                     IconTextRow(Icons.Filled.Bolt, "2. Start Shizuku: Wireless debugging on Android 11+, or adb shell sh /sdcard/Android/data/moe.shizuku.privileged.api/start.sh on older builds.")
-                    IconTextRow(Icons.Filled.Security, "3. Tap “Request permission” here and allow Gothwad Store.")
+                    IconTextRow(Icons.Filled.Security, "3. Tap “Request permission” here and allow Kiwi Store.")
                     IconTextRow(Icons.Filled.VerifiedUser, "4. Pick “Shizuku / Sui (ADB)” as the default install method.")
                 }
             }
@@ -506,7 +506,7 @@ fun RootScreen(vm: StoreViewModel, nav: NavController) {
             item {
                 InfoBanner(
                     title = "Root is optional",
-                    message = "With root Gothwad Store can run pm install silently and even downgrade apps. " +
+                    message = "With root Kiwi Store can run pm install silently and even downgrade apps. " +
                         "The app never asks for root unless you pick this method.",
                     tone = if (capabilities.rootGranted) BannerTone.Info else BannerTone.Warning,
                 )
@@ -529,7 +529,7 @@ fun RootScreen(vm: StoreViewModel, nav: NavController) {
                     )
                     SettingRow(
                         title = "Open Magisk / KernelSU",
-                        subtitle = "Grant Gothwad Store superuser access there",
+                        subtitle = "Grant Kiwi Store superuser access there",
                         onClick = {
                             val context = AppGraph.context()
                             listOf("com.topjohnwu.magisk", "me.weishu.kernelsu", "eu.chainfire.supersu").forEach { pkg ->
@@ -587,7 +587,7 @@ fun AdbScreen(vm: StoreViewModel, nav: NavController) {
                 InfoBanner(
                     title = "ADB is the most reliable silent path",
                     message = "If Shizuku or root are not available, install the APK straight from a computer. " +
-                        "Gothwad Store hands you the file and the exact command.",
+                        "Kiwi Store hands you the file and the exact command.",
                 )
             }
             item { SectionHeader(title = "Commands") }
@@ -669,7 +669,7 @@ fun InstallHelpScreen(vm: StoreViewModel, nav: NavController) {
         ) {
             item {
                 InfoBanner(
-                    title = "How a Gothwad Store install works",
+                    title = "How a Kiwi Store install works",
                     message = "Download → SHA-256 check → install method → PackageInstaller → " +
                         "InstallResultReceiver → library update.",
                 )
@@ -679,7 +679,7 @@ fun InstallHelpScreen(vm: StoreViewModel, nav: NavController) {
                 SettingsGroup {
                     ErrorHelpRow(
                         "INSTALL_FAILED_USER_RESTRICTED",
-                        "Android blocked the install. Open Install permission and allow Gothwad Store, then retry.",
+                        "Android blocked the install. Open Install permission and allow Kiwi Store, then retry.",
                         onClick = { nav.navigate(Routes.INSTALL_PERMISSION) },
                     )
                     ErrorHelpRow(

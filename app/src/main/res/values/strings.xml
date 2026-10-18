@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">Gothwad Store</string>
-    <string name="app_tagline">Apps, games and updates from Gothwad Tech</string>
+    <string name="app_name">Kiwi Store</string>
+    <string name="app_tagline">Apps and games, managed by Gothwad Tech &amp; Dark Root</string>
     <string name="download_channel_name">Downloads</string>
     <string name="download_channel_description">APK download progress and finished downloads</string>
     <string name="install_channel_name">Installs</string>
-    <string name="install_channel_description">Install results for apps you asked Gothwad Store to install</string>
+    <string name="install_channel_description">Install results for apps you asked Kiwi Store to install</string>
 </resources>

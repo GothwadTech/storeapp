@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -300,7 +301,7 @@ fun GothwadBottomBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                .heightIn(min = 62.dp)
+                .heightIn(min = 80.dp)
                 .testTag("bottom_bar"),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -333,6 +334,7 @@ private fun BottomTabItem(
     )
     Column(
         modifier = modifier
+            .fillMaxHeight()
             .clip(RoundedCornerShape(16.dp))
             .clickable(onClick = onClick)
             .padding(vertical = 6.dp)
@@ -342,8 +344,8 @@ private fun BottomTabItem(
     ) {
         Box(
             modifier = Modifier
-                .width(52.dp)
-                .height(28.dp)
+                .width(64.dp)
+                .height(32.dp)
                 .clip(CircleShape)
                 .background(pill),
             contentAlignment = Alignment.Center,
@@ -352,12 +354,12 @@ private fun BottomTabItem(
                 imageVector = if (selected) spec.active else spec.inactive,
                 contentDescription = spec.label,
                 tint = tint,
-                modifier = Modifier.size(22.dp),
+                modifier = Modifier.size(24.dp),
             )
         }
         Text(
             text = spec.label,
-            fontSize = 11.sp,
+            fontSize = 12.sp,
             color = tint,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             maxLines = 1,

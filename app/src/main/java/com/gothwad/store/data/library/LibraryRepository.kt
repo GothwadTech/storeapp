@@ -30,7 +30,7 @@ data class InstalledApp(
 data class LibraryState(
     /** package name → installed version code, as reported by Android. */
     val installed: Map<String, Long> = emptyMap(),
-    /** store app ids that were installed through Gothwad Store. */
+    /** store app ids that were installed through Kiwi Store. */
     val installedAppIds: List<String> = emptyList(),
     val wishlist: List<String> = emptyList(),
     /** app ids the Worker knows about for this account. */

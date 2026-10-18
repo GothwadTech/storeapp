@@ -9,8 +9,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gothwad.store.core.AppGraph
 import com.gothwad.store.data.settings.ThemeMode
-import com.gothwad.store.ui.GothwadApp
-import com.gothwad.store.ui.theme.GothwadStoreTheme
+import com.gothwad.store.ui.KiwiApp
+import com.gothwad.store.ui.theme.KiwiStoreTheme
 
 class MainActivity : ComponentActivity() {
 
@@ -22,8 +22,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val settings = AppGraph.settings.settings
                 .collectAsStateWithLifecycle(initialValue = null)
-            GothwadStoreTheme(themeMode = settings.value?.themeMode ?: ThemeMode.System) {
-                GothwadApp()
+            KiwiStoreTheme(themeMode = settings.value?.themeMode ?: ThemeMode.System) {
+                KiwiApp()
             }
         }
     }

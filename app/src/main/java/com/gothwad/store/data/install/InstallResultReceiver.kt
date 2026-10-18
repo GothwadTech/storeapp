@@ -65,7 +65,7 @@ class InstallResultReceiver : BroadcastReceiver() {
                     context, appId, appName, packageName, versionCode,
                     InstallPhase.AwaitingUser(
                         if (launched) "Confirm the install in Android's dialog."
-                        else "Open the Gothwad Store notification to finish installing.",
+                        else "Open the Kiwi Store notification to finish installing.",
                     ),
                     uninstall,
                 )
@@ -80,7 +80,7 @@ class InstallResultReceiver : BroadcastReceiver() {
                 context, appId, appName, packageName, versionCode,
                 InstallPhase.Failed(
                     "Android blocked this install.",
-                    "Allow “Install unknown apps” for Gothwad Store and check Play Protect.",
+                    "Allow “Install unknown apps” for Kiwi Store and check Play Protect.",
                 ),
                 uninstall,
             )
@@ -89,7 +89,7 @@ class InstallResultReceiver : BroadcastReceiver() {
                 context, appId, appName, packageName, versionCode,
                 InstallPhase.Failed(
                     "A different version of this app is already installed.",
-                    "Uninstall the installed copy, then install it again from Gothwad Store.",
+                    "Uninstall the installed copy, then install it again from Kiwi Store.",
                 ),
                 uninstall,
             )
@@ -103,7 +103,7 @@ class InstallResultReceiver : BroadcastReceiver() {
                 context, appId, appName, packageName, versionCode,
                 InstallPhase.Failed(
                     "The downloaded APK is invalid.",
-                    "Delete the download and fetch it again from Gothwad Store.",
+                    "Delete the download and fetch it again from Kiwi Store.",
                 ),
                 uninstall,
             )
