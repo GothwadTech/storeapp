@@ -14,6 +14,7 @@ import com.gothwad.store.data.download.DownloadStatus
 import com.gothwad.store.data.download.DownloadTask
 import com.gothwad.store.data.install.InstallPhase
 import com.gothwad.store.data.install.InstallRequest
+import com.gothwad.store.data.remote.FdroidCatalog
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -160,73 +161,93 @@ class ApkDownloadService : Service() {
             )
         }
 
-        val builder = Request.Builder().url(task.url)
-        if (existing > 0) builder.header("Range", "bytes=$existing-")
-        val call = AppGraph.http.newCall(builder.build())
-        call.execute().use { response ->
-            if (!response.isSuccessful) {
-                throw IOException("The Store server answered ${response.code} for this APK.")
-            }
-            val body = response.body ?: throw IOException("The Store returned an empty APK response.")
-            val offset = if (response.code == 206) existing else 0L
-            val contentLength = body.contentLength()
-            val total = when {
-                task.totalBytes > 0 -> task.totalBytes
-                contentLength > 0 -> offset + contentLength
-                else -> 0L
-            }
-            var written = offset
-            var lastTick = 0L
-            var lastBytes = written
-            var lastTimestamp = System.currentTimeMillis()
+        val candidateUrls = FdroidCatalog.candidateUrls(task.url)
+        var lastError: Throwable? = null
+        var succeeded = false
 
-            FileOutputStream(target, offset > 0).use { out ->
-                body.byteStream().use { input ->
-                    val buffer = ByteArray(128 * 1024)
-                    while (true) {
-                        coroutineContext.ensureActive()
-                        val read = input.read(buffer)
-                        if (read <= 0) break
-                        out.write(buffer, 0, read)
-                        written += read
-                        val now = System.currentTimeMillis()
-                        if (now - lastTick >= 400) {
-                            lastTick = now
-                            val elapsed = (now - lastTimestamp).coerceAtLeast(1L)
-                            val speed = ((written - lastBytes) * 1000L) / elapsed
-                            lastBytes = written
-                            lastTimestamp = now
-                            store.update(task.id, persist = false) {
-                                it.copy(bytesDownloaded = written, totalBytes = total, status = DownloadStatus.RUNNING)
+        for (candidateUrl in candidateUrls) {
+            coroutineContext.ensureActive()
+            val currentExisting = if (target.exists()) target.length() else 0L
+            val builder = Request.Builder().url(candidateUrl)
+            if (currentExisting > 0) builder.header("Range", "bytes=$currentExisting-")
+            try {
+                val call = AppGraph.http.newCall(builder.build())
+                call.execute().use { response ->
+                    if (!response.isSuccessful) {
+                        throw IOException("The Store server answered ${response.code} for this APK.")
+                    }
+                    val body = response.body ?: throw IOException("The Store returned an empty APK response.")
+                    val offset = if (response.code == 206) currentExisting else 0L
+                    val contentLength = body.contentLength()
+                    val total = when {
+                        task.totalBytes > 0 -> task.totalBytes
+                        contentLength > 0 -> offset + contentLength
+                        else -> 0L
+                    }
+                    var written = offset
+                    var lastTick = 0L
+                    var lastBytes = written
+                    var lastTimestamp = System.currentTimeMillis()
+
+                    FileOutputStream(target, offset > 0).use { out ->
+                        body.byteStream().use { input ->
+                            val buffer = ByteArray(128 * 1024)
+                            while (true) {
+                                coroutineContext.ensureActive()
+                                val read = input.read(buffer)
+                                if (read <= 0) break
+                                out.write(buffer, 0, read)
+                                written += read
+                                val now = System.currentTimeMillis()
+                                if (now - lastTick >= 400) {
+                                    lastTick = now
+                                    val elapsed = (now - lastTimestamp).coerceAtLeast(1L)
+                                    val speed = ((written - lastBytes) * 1000L) / elapsed
+                                    lastBytes = written
+                                    lastTimestamp = now
+                                    store.update(task.id, persist = false) {
+                                        it.copy(bytesDownloaded = written, totalBytes = total, status = DownloadStatus.RUNNING)
+                                    }
+                                    if (AppGraph.settings.current.notifyDownloads) {
+                                        getSystemService(NotificationManager::class.java)?.notify(
+                                            task.id.hashCode(),
+                                            DownloadNotifications.progress(
+                                                this@ApkDownloadService,
+                                                task.copy(bytesDownloaded = written, totalBytes = total),
+                                                speed,
+                                            ),
+                                        )
+                                    }
+                                }
                             }
-                            if (AppGraph.settings.current.notifyDownloads) {
-                                getSystemService(NotificationManager::class.java)?.notify(
-                                    task.id.hashCode(),
-                                    DownloadNotifications.progress(
-                                        this@ApkDownloadService,
-                                        task.copy(bytesDownloaded = written, totalBytes = total),
-                                        speed,
-                                    ),
-                                )
-                            }
+                            out.flush()
                         }
                     }
-                    out.flush()
-                }
-            }
 
-            val finalBytes = if (total > 0) total else written
-            val completed = task.copy(
-                bytesDownloaded = finalBytes,
-                totalBytes = finalBytes,
-                status = DownloadStatus.COMPLETED,
-                filePath = target.absolutePath,
-                downloadedAt = now(),
-                updatedAt = now(),
-                error = null,
-            )
-            store.upsert(completed)
-            finish(completed, target)
+                    val finalBytes = if (total > 0) total else written
+                    val completed = task.copy(
+                        bytesDownloaded = finalBytes,
+                        totalBytes = finalBytes,
+                        status = DownloadStatus.COMPLETED,
+                        filePath = target.absolutePath,
+                        downloadedAt = now(),
+                        updatedAt = now(),
+                        error = null,
+                    )
+                    store.upsert(completed)
+                    finish(completed, target)
+                    succeeded = true
+                }
+                if (succeeded) break
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Throwable) {
+                lastError = error
+            }
+        }
+
+        if (!succeeded) {
+            throw lastError ?: IOException("The download could not be completed.")
         }
     }
 

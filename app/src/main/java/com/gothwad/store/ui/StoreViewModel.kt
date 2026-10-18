@@ -83,7 +83,7 @@ class StoreViewModel : ViewModel() {
     private val _events = MutableStateFlow<StoreEvent?>(null)
     val events: StateFlow<StoreEvent?> = _events.asStateFlow()
 
-    /** appId → newest release the Worker published for this device. */
+    /** appId → newest release the Worker or F-Droid published for this device. */
     private val _releases = MutableStateFlow<Map<String, StoreRelease>>(emptyMap())
     val releases: StateFlow<Map<String, StoreRelease>> = _releases.asStateFlow()
 
@@ -92,8 +92,9 @@ class StoreViewModel : ViewModel() {
     val knownApps: StateFlow<Map<String, StoreApp>> = _knownApps.asStateFlow()
 
     /**
-     * The optional F-Droid catalogue, kept apart from the first-party
-     * listings so Home can show it as its own shelf.
+     * The F-Droid catalogue, kept apart from the first-party listings so Home
+     * can show it as its own dedicated shelf while also merging it into Apps,
+     * Games, Categories, Top Charts, and Search.
      */
     private val _fdroid = MutableStateFlow(CatalogBundle())
     val fdroid: StateFlow<CatalogBundle> = _fdroid.asStateFlow()
@@ -103,6 +104,19 @@ class StoreViewModel : ViewModel() {
 
     val downloads: StateFlow<List<DownloadTask>> = downloader.tasks
     val installPhases: StateFlow<Map<String, InstallPhase>> = installer.phases
+
+    private var firstPartyHomeCache: CatalogResponse = CatalogResponse()
+    private var firstPartyAppsCache: CatalogResponse = CatalogResponse()
+    private var currentAppsKind: String? = "app"
+    private var currentAppsCategory: String? = null
+    private var firstPartyGamesCache: CatalogResponse = CatalogResponse()
+    private var firstPartyChartsCache: CatalogResponse = CatalogResponse()
+    private var currentChartsKind: String? = null
+    private var firstPartyCategoryCache: CatalogResponse = CatalogResponse()
+    private var currentCategorySlug: String? = null
+    private var currentCategoryKind: String? = null
+    private var firstPartySearchCache: CatalogResponse = CatalogResponse()
+    private var currentSearchQuery: String = ""
 
     private var homeJob: Job? = null
     private var appsJob: Job? = null
@@ -114,25 +128,108 @@ class StoreViewModel : ViewModel() {
     private var fdroidJob: Job? = null
 
     init {
+        observeFdroidUpdates()
         refreshHome()
         refreshCategories()
+        loadFdroid()
+    }
+
+    /**
+     * Reactively merges F-Droid + IzzyOnDroid catalogue emissions into every
+     * screen state so that whether F-Droid finishes before or after the
+     * first-party Worker (or emits progressively as each repo completes),
+     * every tab automatically shows the combined apps.
+     */
+    private fun observeFdroidUpdates() {
+        viewModelScope.launch {
+            repository.fdroidUpdates.collect { external ->
+                if (external == null || external.apps.isEmpty()) return@collect
+                val index = repository.releaseIndex(external)
+                if (index.isNotEmpty()) _releases.value = _releases.value + index
+                _knownApps.value = _knownApps.value + external.apps.associateBy { it.id }
+                _fdroid.value = CatalogBundle(external.apps, index)
+
+                val mergedHome = repository.mergeWithExternal(
+                    gothwad = firstPartyHomeCache,
+                    external = external,
+                    kind = null,
+                    category = null,
+                )
+                _home.value = registerAndBuildState(mergedHome)
+
+                val mergedApps = repository.mergeWithExternal(
+                    gothwad = firstPartyAppsCache,
+                    external = external,
+                    kind = currentAppsKind,
+                    category = currentAppsCategory,
+                )
+                _apps.value = registerAndBuildState(mergedApps)
+
+                val mergedGames = repository.mergeWithExternal(
+                    gothwad = firstPartyGamesCache,
+                    external = external,
+                    kind = "game",
+                    category = null,
+                )
+                _games.value = registerAndBuildState(mergedGames)
+
+                if (_charts.value is UiState.Ready || chartsJob != null) {
+                    val mergedCharts = repository.mergeWithExternal(
+                        gothwad = firstPartyChartsCache,
+                        external = external,
+                        kind = currentChartsKind,
+                        category = null,
+                    )
+                    _charts.value = registerAndBuildState(mergedCharts)
+                }
+
+                val slug = currentCategorySlug
+                if (!slug.isNullOrBlank()) {
+                    val mergedCat = repository.mergeWithExternal(
+                        gothwad = firstPartyCategoryCache,
+                        external = external,
+                        kind = currentCategoryKind,
+                        category = slug,
+                    )
+                    _categoryApps.value = registerAndBuildState(mergedCat)
+                }
+
+                val q = currentSearchQuery
+                if (q.isNotEmpty()) {
+                    val mergedSearch = repository.mergeWithExternal(
+                        gothwad = firstPartySearchCache,
+                        external = external,
+                        kind = null,
+                        category = null,
+                        query = q,
+                    )
+                    _searchResults.value = registerAndBuildState(mergedSearch)
+                }
+            }
+        }
     }
 
     // ── Catalogue ─────────────────────────────────────────────────────────
     fun refreshHome(showLoading: Boolean = true) {
         homeJob?.cancel()
         homeJob = viewModelScope.launch {
-            if (showLoading) _home.value = UiState.Loading
-            _home.value = load { repository.firstPartyHome(null) }
+            if (showLoading && _home.value !is UiState.Ready) _home.value = UiState.Loading
+            _home.value = loadWithUpstream(
+                firstParty = { repository.firstPartyHome(null).also { firstPartyHomeCache = it } },
+                merged = { repository.withFdroid(it, null, null) },
+                publish = { _home.value = it },
+            )
         }
     }
 
     fun refreshApps(kind: String? = null, category: String? = null) {
+        currentAppsKind = kind
+        currentAppsCategory = category
         appsJob?.cancel()
         appsJob = viewModelScope.launch {
             _apps.value = UiState.Loading
             _apps.value = loadWithUpstream(
-                firstParty = { repository.firstPartyCatalog(kind, category, "") },
+                firstParty = { repository.firstPartyCatalog(kind, category, "").also { firstPartyAppsCache = it } },
                 merged = { repository.withFdroid(it, kind, category) },
                 publish = { _apps.value = it },
             )
@@ -142,9 +239,9 @@ class StoreViewModel : ViewModel() {
     fun refreshGames() {
         gamesJob?.cancel()
         gamesJob = viewModelScope.launch {
-            _games.value = UiState.Loading
+            if (_games.value !is UiState.Ready) _games.value = UiState.Loading
             _games.value = loadWithUpstream(
-                firstParty = { repository.firstPartyCatalog("game", null, "") },
+                firstParty = { repository.firstPartyCatalog("game", null, "").also { firstPartyGamesCache = it } },
                 merged = { repository.withFdroid(it, "game", null) },
                 publish = { _games.value = it },
             )
@@ -152,14 +249,17 @@ class StoreViewModel : ViewModel() {
     }
 
     /**
-     * Loads the optional F-Droid catalogue once. It is a separate shelf on
-     * Home and an extra source in Apps, Search and the category pages.
+     * Loads the F-Droid catalogue. It is shown as its own shelf on Home and
+     * merged into Apps, Games, Search, Top Charts, and Category screens.
      */
-    fun loadFdroid() {
-        if (fdroidJob?.isActive == true) return
+    fun loadFdroid() = loadFdroid(forceRefresh = false)
+
+    fun loadFdroid(forceRefresh: Boolean) {
+        if (!forceRefresh && fdroidJob?.isActive == true) return
+        fdroidJob?.cancel()
         fdroidJob = viewModelScope.launch {
             val response = try {
-                repository.fdroidCatalog()
+                repository.fdroidCatalog(forceRefresh)
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (_: Exception) {
@@ -167,16 +267,27 @@ class StoreViewModel : ViewModel() {
             }
             val index = repository.releaseIndex(response)
             if (index.isNotEmpty()) _releases.value = _releases.value + index
+            if (response.apps.isNotEmpty()) {
+                _knownApps.value = _knownApps.value + response.apps.associateBy { it.id }
+            }
             _fdroid.value = CatalogBundle(response.apps, index)
         }
     }
 
+    fun retryFdroid() {
+        loadFdroid(forceRefresh = true)
+        refreshHome(showLoading = false)
+        refreshApps(kind = currentAppsKind, category = currentAppsCategory)
+        refreshGames()
+    }
+
     fun refreshCharts(kind: String?) {
+        currentChartsKind = kind
         chartsJob?.cancel()
         chartsJob = viewModelScope.launch {
             _charts.value = UiState.Loading
             _charts.value = loadWithUpstream(
-                firstParty = { repository.charts(kind) },
+                firstParty = { repository.charts(kind).also { firstPartyChartsCache = it } },
                 merged = { repository.withFdroid(it, kind, null) },
                 publish = { _charts.value = it },
             )
@@ -197,12 +308,14 @@ class StoreViewModel : ViewModel() {
     }
 
     fun loadCategory(slug: String, kind: String?) {
-        categoryJob?.cancel()
         val filter = kind?.takeIf { it != "both" }
+        currentCategorySlug = slug
+        currentCategoryKind = filter
+        categoryJob?.cancel()
         categoryJob = viewModelScope.launch {
             _categoryApps.value = UiState.Loading
             _categoryApps.value = loadWithUpstream(
-                firstParty = { repository.firstPartyCatalog(filter, slug, "") },
+                firstParty = { repository.firstPartyCatalog(filter, slug, "").also { firstPartyCategoryCache = it } },
                 merged = { repository.withFdroid(it, filter, slug) },
                 publish = { _categoryApps.value = it },
             )
@@ -212,7 +325,9 @@ class StoreViewModel : ViewModel() {
     fun search(query: String, debounceMs: Long = 300) {
         searchJob?.cancel()
         val trimmed = query.trim()
+        currentSearchQuery = trimmed
         if (trimmed.isEmpty()) {
+            firstPartySearchCache = CatalogResponse()
             _searchResults.value = UiState.Ready(CatalogBundle())
             return
         }
@@ -220,7 +335,7 @@ class StoreViewModel : ViewModel() {
             delay(debounceMs)
             _searchResults.value = UiState.Loading
             _searchResults.value = loadWithUpstream(
-                firstParty = { repository.firstPartyCatalog(null, null, trimmed) },
+                firstParty = { repository.firstPartyCatalog(null, null, trimmed).also { firstPartySearchCache = it } },
                 merged = { repository.withFdroid(it, null, null, trimmed) },
                 publish = { _searchResults.value = it },
             )
@@ -429,16 +544,22 @@ class StoreViewModel : ViewModel() {
     }
 
     // ── Internals ─────────────────────────────────────────────────────────
-    private suspend fun load(block: suspend () -> CatalogResponse): UiState<CatalogBundle> = try {
-        val response = block()
+    private fun registerAndBuildState(response: CatalogResponse): UiState.Ready<CatalogBundle> {
         val index = repository.releaseIndex(response)
         if (index.isNotEmpty()) _releases.value = _releases.value + index
         if (response.apps.isNotEmpty()) {
             _knownApps.value = _knownApps.value + response.apps.associateBy { it.id }
         }
-        if (response.apps.isEmpty()) UiState.Ready(CatalogBundle()) else UiState.Ready(
-            CatalogBundle(response.apps, index),
-        )
+        return if (response.apps.isEmpty()) {
+            UiState.Ready(CatalogBundle())
+        } else {
+            UiState.Ready(CatalogBundle(response.apps, index))
+        }
+    }
+
+    private suspend fun load(block: suspend () -> CatalogResponse): UiState<CatalogBundle> = try {
+        val response = block()
+        registerAndBuildState(response)
     } catch (cancellation: CancellationException) {
         throw cancellation
     } catch (error: Exception) {
@@ -446,13 +567,12 @@ class StoreViewModel : ViewModel() {
     }
 
     /**
-     * Publishes the first-party catalogue right away and then adds the
-     * optional F-Droid catalogue once its index has been downloaded.
+     * Publishes the first-party catalogue right away when non-empty and then
+     * adds the F-Droid catalogue once its index is available.
      *
-     * F-Droid's index is several megabytes, so waiting for the merge before
-     * rendering anything would leave the user staring at a spinner on a slow
-     * connection. If the upstream catalogue cannot be reached, the
-     * first-party list simply stays.
+     * Avoids flashing a premature empty state on Games, Category, or Search
+     * screens when first-party returns 0 items while F-Droid is still loading,
+     * and falls back to F-Droid if the first-party Worker is unreachable.
      */
     private suspend fun loadWithUpstream(
         firstParty: suspend () -> CatalogResponse,
@@ -464,12 +584,21 @@ class StoreViewModel : ViewModel() {
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
+            val fallback = runCatching { merged(CatalogResponse()) }.getOrNull()
+            if (fallback != null && fallback.apps.isNotEmpty()) {
+                return registerAndBuildState(fallback).also(publish)
+            }
             return error.toUiState()
         }
-        val first = load { base }
-        publish(first)
+        if (base.apps.isNotEmpty()) {
+            publish(registerAndBuildState(base))
+        }
         val second = load { merged(base) }
-        return if (second is UiState.Ready) second else first
+        return if (second is UiState.Ready) {
+            second.also(publish)
+        } else {
+            registerAndBuildState(base).also(publish)
+        }
     }
 
     private fun Throwable.toUiState(): UiState.Failed {

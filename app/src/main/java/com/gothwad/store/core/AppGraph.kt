@@ -7,6 +7,7 @@ import com.gothwad.store.data.download.DownloadStore
 import com.gothwad.store.data.install.InstallEngine
 import com.gothwad.store.data.install.ShizukuBridge
 import com.gothwad.store.data.library.LibraryRepository
+import com.gothwad.store.data.remote.FdroidCatalog
 import com.gothwad.store.data.remote.StoreNetwork
 import com.gothwad.store.data.remote.StoreRepository
 import com.gothwad.store.data.settings.SettingsRepository
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
+import java.io.File
 
 /**
  * Hand-rolled dependency graph. Small enough that a DI framework would only add
@@ -58,7 +60,9 @@ object AppGraph {
         if (ready) return true
         appContext = application
         settings = SettingsRepository(application)
-        store = StoreRepository()
+        store = StoreRepository(
+            fdroid = FdroidCatalog(cacheDir = File(application.cacheDir, "fdroid")),
+        )
         auth = AuthManager(application)
         downloads = DownloadStore(application)
         installer = InstallEngine(application) { downloads.apkDir }
