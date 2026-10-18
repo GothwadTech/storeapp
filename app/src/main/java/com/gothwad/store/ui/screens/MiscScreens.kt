@@ -66,7 +66,7 @@ private fun openUrl(context: android.content.Context, url: String, onFail: (Stri
     if (!ok) onFail("No browser is available to open $url")
 }
 
-/** console.gothwadtech.com bridge — publishers manage releases there. */
+/** kiwiconsole.gothwadtech.com bridge — publishers manage releases there. */
 @Composable
 fun DeveloperConsoleScreen(vm: StoreViewModel, nav: NavController) {
     val context = LocalContext.current
@@ -86,7 +86,7 @@ fun DeveloperConsoleScreen(vm: StoreViewModel, nav: NavController) {
                     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                         BrandAvatar(text = "GC", size = 46.dp)
                         Column {
-                            Text("console.gothwadtech.com", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                            Text("kiwiconsole.gothwadtech.com", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                             Text(
                                 "Upload APKs, write listing copy and follow the review queue",
                                 fontSize = 12.sp,
@@ -228,7 +228,7 @@ fun AboutScreen(vm: StoreViewModel, nav: NavController) {
                     InfoBanner(
                         title = "Live data only",
                         message = "Listings, releases and reviews come from the Gothwad Worker " +
-                            "(store.gothwadtech.com/api). There is no bundled demo catalogue.",
+                            "(kiwistore.gothwadtech.com/api). There is no bundled demo catalogue.",
                     )
                 }
             }
@@ -253,12 +253,12 @@ fun AboutScreen(vm: StoreViewModel, nav: NavController) {
                     )
                     SettingRow(
                         title = "Terms of service",
-                        subtitle = "store.gothwadtech.com/terms",
+                        subtitle = "kiwistore.gothwadtech.com/terms",
                         onClick = { openUrl(context, "${BuildConfig.STORE_WEB_URL}terms") { vm.emit(StoreEvent.Message(it)) } },
                     )
                     SettingRow(
                         title = "Privacy policy",
-                        subtitle = "store.gothwadtech.com/privacy",
+                        subtitle = "kiwistore.gothwadtech.com/privacy",
                         icon = Icons.Filled.PrivacyTip,
                         onClick = { openUrl(context, "${BuildConfig.STORE_WEB_URL}privacy") { vm.emit(StoreEvent.Message(it)) } },
                     )

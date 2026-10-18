@@ -5,7 +5,7 @@ import os
 import urllib.parse
 import urllib.request
 
-BASE = 'https://store.gothwadtech.com/api/'
+BASE = 'https://kiwistore.gothwadtech.com/api/'
 
 def read(path):
     req = urllib.request.Request(BASE + path, headers={'Accept': 'application/json', 'User-Agent': 'KiwiStore-CI/1.0'})

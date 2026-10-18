@@ -23,7 +23,7 @@ class InstallActionTest {
         appId = "app-1",
         versionCode = versionCode,
         versionName = "1.0.$versionCode",
-        apkUrl = "https://store.gothwadtech.com/api/download/rel-$versionCode",
+        apkUrl = "https://kiwistore.gothwadtech.com/api/download/rel-$versionCode",
         apkSizeBytes = 4_274_549,
         apkSha256 = "cc08fc96d2c386679d4be4058610e8924d206f5976eedbd1bfe7921e7ce423f0",
         minSdk = minSdk,

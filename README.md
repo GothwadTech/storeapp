@@ -45,7 +45,7 @@ Gradle 9.3.1 wrapper. Android 7.0 / API 24 is the minimum device version.
 # APK: app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Default API: `https://store.gothwadtech.com/api/`. For an HTTPS staging Worker:
+Default API: `https://kiwistore.gothwadtech.com/api/`. For an HTTPS staging Worker:
 
 ```sh
 ./gradlew assembleDebug -PSTORE_API_BASE_URL=https://your-staging-host/api/

@@ -31,13 +31,13 @@ android {
       require(it.matches(Regex("[0-9][0-9A-Za-z.+_-]{0,63}"))) { "Invalid versionName" }
     }
 
-    buildConfigField("String", "STORE_API_BASE_URL", "\"${httpsProperty("STORE_API_BASE_URL", "https://store.gothwadtech.com/api/")}\"")
-    buildConfigField("String", "CONSOLE_URL", "\"${httpsProperty("CONSOLE_URL", "https://console.gothwadtech.com/")}\"")
-    buildConfigField("String", "STORE_WEB_URL", "\"${httpsProperty("STORE_WEB_URL", "https://store.gothwadtech.com/")}\"")
+    buildConfigField("String", "STORE_API_BASE_URL", "\"${httpsProperty("STORE_API_BASE_URL", "https://kiwistore.gothwadtech.com/api/")}\"")
+    buildConfigField("String", "CONSOLE_URL", "\"${httpsProperty("CONSOLE_URL", "https://kiwiconsole.gothwadtech.com/")}\"")
+    buildConfigField("String", "STORE_WEB_URL", "\"${httpsProperty("STORE_WEB_URL", "https://kiwistore.gothwadtech.com/")}\"")
     buildConfigField("String", "ACCOUNTS_API_BASE_URL", "\"${httpsProperty("ACCOUNTS_API_BASE_URL", "https://accounts.gothwadtech.com/api/")}\"")
     buildConfigField("String", "ACCOUNTS_SIGNIN_URL", "\"${httpsProperty("ACCOUNTS_SIGNIN_URL", "https://accounts.gothwadtech.com/")}\"")
     buildConfigField("String", "SHIZUKU_DOWNLOAD_URL", "\"${httpsProperty("SHIZUKU_DOWNLOAD_URL", "https://shizuku.rikka.app/")}\"")
-    buildConfigField("String", "OAUTH_CLIENT_ID", "\"${providers.gradleProperty("OAUTH_CLIENT_ID").orElse("gothwad-store").get()}\"")
+    buildConfigField("String", "OAUTH_CLIENT_ID", "\"${providers.gradleProperty("OAUTH_CLIENT_ID").orElse("kiwi-store").get()}\"")
     buildConfigField("String", "OAUTH_REDIRECT_URI", "\"gothwadstore://oauth/callback\"")
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
