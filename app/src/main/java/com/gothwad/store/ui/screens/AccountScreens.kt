@@ -211,7 +211,7 @@ fun AccountScreen(vm: StoreViewModel, nav: NavController) {
                     )
                     SettingRow(
                         title = "Developer Console",
-                        subtitle = "Publish and manage your own apps at console.gothwadtech.com",
+                        subtitle = "Publish and manage your own apps at kiwiconsole.gothwadtech.com",
                         icon = Icons.Filled.Dashboard,
                         onClick = { nav.navigate(Routes.DEVELOPER_CONSOLE) },
                         trailingText = "Open",
@@ -637,7 +637,7 @@ fun AccountDetailsScreen(vm: StoreViewModel, nav: NavController) {
                         )
                         SettingRow(
                             title = "Developer Console",
-                            subtitle = "console.gothwadtech.com",
+                            subtitle = "kiwiconsole.gothwadtech.com",
                             onClick = { nav.navigate(Routes.DEVELOPER_CONSOLE) },
                         )
                         SettingRow(

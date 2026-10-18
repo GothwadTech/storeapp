@@ -496,7 +496,7 @@ fun PrivacyScreen(vm: StoreViewModel, nav: NavController) {
             item {
                 InfoBanner(
                     title = "No trackers, no analytics SDKs",
-                    message = "Kiwi Store talks to two hosts: store.gothwadtech.com (catalogue, downloads, " +
+                    message = "Kiwi Store talks to two hosts: kiwistore.gothwadtech.com (catalogue, downloads, " +
                         "reviews) and accounts.gothwadtech.com (sign-in). Everything else is on-device.",
                 )
             }
@@ -558,7 +558,7 @@ fun PrivacyScreen(vm: StoreViewModel, nav: NavController) {
                 Column(Modifier.padding(Spacing.screenH)) {
                     Spacer(Modifier.height(10.dp))
                     Text(
-                        "Full policy: store.gothwadtech.com/privacy",
+                        "Full policy: kiwistore.gothwadtech.com/privacy",
                         fontSize = 12.sp,
                         color = GothwadTheme.extra.textTertiary,
                     )

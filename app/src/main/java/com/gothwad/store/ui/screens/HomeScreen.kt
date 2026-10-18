@@ -277,7 +277,7 @@ private fun HomeContent(
             Column(Modifier.padding(Spacing.screenH)) {
                 DividerLine()
                 Text(
-                    "Live catalogue · store.gothwadtech.com",
+                    "Live catalogue · kiwistore.gothwadtech.com",
                     modifier = Modifier.padding(top = 14.dp),
                     style = MaterialTheme.typography.bodySmall,
                     color = GothwadTheme.extra.textTertiary,

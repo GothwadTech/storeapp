@@ -160,15 +160,15 @@ class CatalogModelsTest {
     @Test
     fun `release urls resolve against the api origin`() {
         assertEquals(
-            "https://store.gothwadtech.com/api/download/rel-519dd30f-c4ec-4f28-972a-2ff60437e2bd",
+            "https://kiwistore.gothwadtech.com/api/download/rel-519dd30f-c4ec-4f28-972a-2ff60437e2bd",
             StoreNetwork.downloadUrl("rel-519dd30f-c4ec-4f28-972a-2ff60437e2bd"),
         )
         assertEquals(
-            "https://store.gothwadtech.com/api/download/rel-1",
+            "https://kiwistore.gothwadtech.com/api/download/rel-1",
             StoreNetwork.absoluteUrl("/api/download/rel-1"),
         )
         assertEquals(
-            "https://store.gothwadtech.com/api/download/rel-1",
+            "https://kiwistore.gothwadtech.com/api/download/rel-1",
             StoreNetwork.absoluteUrl("download/rel-1"),
         )
         assertEquals(
