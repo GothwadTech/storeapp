@@ -177,6 +177,8 @@ class StoreViewModel : ViewModel() {
     fun openApp(id: String) {
         detailJob?.cancel()
         _detail.value = UiState.Loading
+        // Powers the "Recently viewed" shelf at the bottom of Search.
+        viewModelScope.launch { settings.addRecentlyViewed(id) }
         detailJob = viewModelScope.launch {
             _detail.value = runCatching { repository.detail(id) }.fold(
                 onSuccess = { detail ->

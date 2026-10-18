@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -66,6 +67,9 @@ import com.gothwad.store.ui.StoreEvent
 import com.gothwad.store.ui.StoreViewModel
 import com.gothwad.store.ui.components.BannerTone
 import com.gothwad.store.ui.components.BrandAvatar
+import com.gothwad.store.ui.components.DownloadsAction
+import com.gothwad.store.ui.components.GothwadScaffold
+import com.gothwad.store.ui.components.GothwadTopBar
 import com.gothwad.store.ui.components.InfoBanner
 import com.gothwad.store.ui.components.KeyValueRow
 import com.gothwad.store.ui.components.OutlineButton
@@ -94,240 +98,262 @@ fun AccountScreen(vm: StoreViewModel, nav: NavController) {
 
     val user = (authState as? AuthState.SignedIn)?.user
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = Spacing.bottomContentPadding),
-    ) {
-        item {
-            ProfileCard(
-                name = user?.displayName ?: settings?.localDisplayName?.takeIf { it.isNotBlank() } ?: "Not signed in",
-                handle = user?.let { if (it.username.isNotBlank()) "@${it.username}" else it.email }
-                    ?: "Sign in with Gothwad for cloud library and reviews",
-                picture = user?.picture,
-                signedIn = user != null,
-                onSignIn = { nav.navigate(Routes.SIGN_IN) },
-                onManage = { nav.navigate(Routes.ACCOUNT_DETAILS) },
+    // Profile is a bottom-tab destination, so it needs the shared Scaffold:
+    // without it the content started under the status bar and the bottom bar
+    // was missing entirely.
+    GothwadScaffold(
+        topBar = {
+            GothwadTopBar(
+                title = "Profile",
+                showBrandMark = true,
+                actions = {
+                    DownloadsAction { nav.navigate(Routes.DOWNLOADS) }
+                    IconButton(onClick = { nav.navigate(Routes.SETTINGS) }) {
+                        Icon(
+                            Icons.Filled.Settings,
+                            contentDescription = "Settings",
+                            tint = GothwadTheme.extra.textSecondary,
+                        )
+                    }
+                },
             )
-        }
-
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Spacing.screenH, vertical = 6.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(MaterialTheme.colorScheme.surface)
-                    .clickable { nav.navigate(Routes.MY_APPS) }
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                StatTile(
-                    label = "Installed",
-                    value = libraryState.installed.size.toString(),
-                    modifier = Modifier.weight(1f),
-                )
-                StatTile(
-                    label = "Wishlist",
-                    value = libraryState.wishlist.size.toString(),
-                    modifier = Modifier.weight(1f),
-                )
-                StatTile(
-                    label = "Downloads",
-                    value = tasks.count { it.isActiveRunning() }.toString(),
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
-
-        item { SectionHeader(title = "Your content") }
-        item {
-            SettingsGroup {
-                SettingRow(
-                    title = "My apps & device",
-                    subtitle = "Updates, library and everything installed",
-                    icon = Icons.Filled.SystemUpdate,
-                    onClick = { nav.navigate(Routes.MY_APPS) },
-                )
-                SettingRow(
-                    title = "Wishlist",
-                    subtitle = "${libraryState.wishlist.size} saved app(s)",
-                    icon = Icons.Filled.BookmarkBorder,
-                    onClick = { nav.navigate(Routes.WISHLIST) },
-                )
-                SettingRow(
-                    title = "Manage downloads",
-                    subtitle = "${tasks.size} job(s) · ${Format.bytes(AppGraph.downloader.usedBytes())} on disk",
-                    icon = Icons.Filled.Download,
-                    onClick = { nav.navigate(Routes.DOWNLOADS) },
-                )
-                SettingRow(
-                    title = "Download history",
-                    subtitle = "Finished, cancelled and failed APKs",
-                    icon = Icons.Filled.Storage,
-                    onClick = { nav.navigate(Routes.DOWNLOAD_HISTORY) },
-                )
-                SettingRow(
-                    title = "On this device",
-                    subtitle = "Every package Android reports",
-                    icon = Icons.Filled.PhoneAndroid,
-                    onClick = { nav.navigate(Routes.ON_DEVICE) },
-                )
-            }
-        }
-
-        item { SectionHeader(title = "Gothwad") }
-        item {
-            SettingsGroup {
-                SettingRow(
-                    title = "Gothwad Accounts",
-                    subtitle = "Profile, password and connected devices",
-                    icon = Icons.Filled.ManageAccounts,
-                    onClick = { nav.navigate(Routes.ACCOUNT_DETAILS) },
-                )
-                SettingRow(
-                    title = "Developer Console",
-                    subtitle = "Publish and manage your own apps at console.gothwadtech.com",
-                    icon = Icons.Filled.Dashboard,
-                    onClick = { nav.navigate(Routes.DEVELOPER_CONSOLE) },
-                    trailingText = "Open",
-                )
-                SettingRow(
-                    title = "Sign-in security",
-                    subtitle = "Sessions, tokens and revoking access",
-                    icon = Icons.Filled.Lock,
-                    onClick = { nav.navigate(Routes.ACCOUNT_SECURITY) },
-                )
-            }
-        }
-
-        item { SectionHeader(title = "Settings") }
-        item {
-            SettingsGroup {
-                SettingRow(
-                    title = "General",
-                    subtitle = "Theme, layout and charts",
-                    icon = Icons.Filled.Settings,
-                    onClick = { nav.navigate(Routes.SETTINGS) },
-                )
-                SettingRow(
-                    title = "Appearance",
-                    subtitle = "Dark mode, theme mode and list density",
-                    icon = Icons.Filled.Palette,
-                    onClick = { nav.navigate(Routes.APPEARANCE) },
-                )
-                SettingRow(
-                    title = "Notifications",
-                    subtitle = "Download, install and update alerts",
-                    icon = Icons.Filled.Notifications,
-                    onClick = { nav.navigate(Routes.NOTIFICATIONS) },
-                )
-                SettingRow(
-                    title = "Network & data",
-                    subtitle = "Wi-Fi only, data saver and retries",
-                    icon = Icons.Filled.Wifi,
-                    onClick = { nav.navigate(Routes.NETWORK) },
-                )
-                SettingRow(
-                    title = "Download preferences",
-                    subtitle = "Checksums, cleanup and parallel downloads",
-                    icon = Icons.Filled.Tune,
-                    onClick = { nav.navigate(Routes.DOWNLOAD_SETTINGS) },
-                )
-                SettingRow(
-                    title = "Installer",
-                    subtitle = "Install permission, Shizuku, root and ADB",
-                    icon = Icons.Filled.Security,
-                    onClick = { nav.navigate(Routes.INSTALL_SETTINGS) },
-                )
-                SettingRow(
-                    title = "Storage",
-                    subtitle = "APKs kept and cleanup tools",
-                    icon = Icons.Filled.Storage,
-                    onClick = { nav.navigate(Routes.STORAGE) },
-                )
-                SettingRow(
-                    title = "Privacy",
-                    subtitle = "What Kiwi Store collects and stores",
-                    icon = Icons.Filled.PrivacyTip,
-                    onClick = { nav.navigate(Routes.PRIVACY) },
-                )
-                SettingRow(
-                    title = "Advanced",
-                    subtitle = "Cache, API host and diagnostics",
-                    icon = Icons.Filled.Tune,
-                    onClick = { nav.navigate(Routes.ADVANCED) },
-                )
-                SettingRow(
-                    title = "About this device",
-                    subtitle = "Android version, ABI and app id",
-                    icon = Icons.Filled.PhoneAndroid,
-                    onClick = { nav.navigate(Routes.DEVICE_INFO) },
-                )
-            }
-        }
-
-        item { SectionHeader(title = "Support") }
-        item {
-            SettingsGroup {
-                SettingRow(
-                    title = "Help & troubleshoot",
-                    subtitle = "Installs, downloads and account problems",
-                    icon = Icons.Filled.HelpOutline,
-                    onClick = { nav.navigate(Routes.HELP) },
-                )
-                SettingRow(
-                    title = "Send feedback",
-                    subtitle = "Tell the Gothwad team what to fix",
-                    icon = Icons.Filled.Feedback,
-                    onClick = { nav.navigate(Routes.FEEDBACK) },
-                )
-                SettingRow(
-                    title = "About Kiwi Store",
-                    subtitle = "Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-                    icon = Icons.Filled.Info,
-                    onClick = { nav.navigate(Routes.ABOUT) },
-                )
-                SettingRow(
-                    title = "Terms & licences",
-                    subtitle = "Legal notices and open-source licences",
-                    icon = Icons.Filled.AccountCircle,
-                    onClick = { nav.navigate(Routes.LEGAL) },
-                )
-            }
-        }
-
-        if (user != null) {
+        },
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(padding),
+            contentPadding = PaddingValues(bottom = Spacing.bottomContentPadding),
+        ) {
             item {
-                Column(Modifier.padding(Spacing.screenH)) {
-                    Spacer(Modifier.height(8.dp))
-                    OutlineButton(
-                        label = "Sign out of this device",
-                        icon = Icons.Filled.Logout,
-                        onClick = {
-                            scope.launch {
-                                AppGraph.auth.signOut()
-                                vm.emit(StoreEvent.Message("Signed out. Your local library stays on this device."))
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
+                ProfileCard(
+                    name = user?.displayName ?: settings?.localDisplayName?.takeIf { it.isNotBlank() } ?: "Not signed in",
+                    handle = user?.let { if (it.username.isNotBlank()) "@${it.username}" else it.email }
+                        ?: "Sign in with Gothwad for cloud library and reviews",
+                    picture = user?.picture,
+                    signedIn = user != null,
+                    onSignIn = { nav.navigate(Routes.SIGN_IN) },
+                    onManage = { nav.navigate(Routes.ACCOUNT_DETAILS) },
+                )
+            }
+
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.screenH, vertical = 6.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .clickable { nav.navigate(Routes.MY_APPS) }
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    StatTile(
+                        label = "Installed",
+                        value = libraryState.installed.size.toString(),
+                        modifier = Modifier.weight(1f),
                     )
-                    Spacer(Modifier.height(14.dp))
-                    Text(
-                        "Kiwi Store ${BuildConfig.VERSION_NAME} · signed in as ${user.username.ifBlank { user.id }}",
-                        fontSize = 11.sp,
-                        color = GothwadTheme.extra.textTertiary,
+                    StatTile(
+                        label = "Wishlist",
+                        value = libraryState.wishlist.size.toString(),
+                        modifier = Modifier.weight(1f),
+                    )
+                    StatTile(
+                        label = "Downloads",
+                        value = tasks.count { it.isActiveRunning() }.toString(),
+                        modifier = Modifier.weight(1f),
                     )
                 }
             }
-        } else {
+
+            item { SectionHeader(title = "Your content") }
             item {
-                Column(Modifier.padding(Spacing.screenH)) {
-                    Spacer(Modifier.height(8.dp))
-                    OutlineButton(
-                        label = "Not signed in — tap to sign in",
-                        onClick = { nav.navigate(Routes.SIGN_IN) },
-                        modifier = Modifier.fillMaxWidth(),
+                SettingsGroup {
+                    SettingRow(
+                        title = "My apps & device",
+                        subtitle = "Updates, library and everything installed",
+                        icon = Icons.Filled.SystemUpdate,
+                        onClick = { nav.navigate(Routes.MY_APPS) },
                     )
+                    SettingRow(
+                        title = "Wishlist",
+                        subtitle = "${libraryState.wishlist.size} saved app(s)",
+                        icon = Icons.Filled.BookmarkBorder,
+                        onClick = { nav.navigate(Routes.WISHLIST) },
+                    )
+                    SettingRow(
+                        title = "Manage downloads",
+                        subtitle = "${tasks.size} job(s) · ${Format.bytes(AppGraph.downloader.usedBytes())} on disk",
+                        icon = Icons.Filled.Download,
+                        onClick = { nav.navigate(Routes.DOWNLOADS) },
+                    )
+                    SettingRow(
+                        title = "Download history",
+                        subtitle = "Finished, cancelled and failed APKs",
+                        icon = Icons.Filled.Storage,
+                        onClick = { nav.navigate(Routes.DOWNLOAD_HISTORY) },
+                    )
+                    SettingRow(
+                        title = "On this device",
+                        subtitle = "Every package Android reports",
+                        icon = Icons.Filled.PhoneAndroid,
+                        onClick = { nav.navigate(Routes.ON_DEVICE) },
+                    )
+                }
+            }
+
+            item { SectionHeader(title = "Gothwad") }
+            item {
+                SettingsGroup {
+                    SettingRow(
+                        title = "Gothwad Accounts",
+                        subtitle = "Profile, password and connected devices",
+                        icon = Icons.Filled.ManageAccounts,
+                        onClick = { nav.navigate(Routes.ACCOUNT_DETAILS) },
+                    )
+                    SettingRow(
+                        title = "Developer Console",
+                        subtitle = "Publish and manage your own apps at console.gothwadtech.com",
+                        icon = Icons.Filled.Dashboard,
+                        onClick = { nav.navigate(Routes.DEVELOPER_CONSOLE) },
+                        trailingText = "Open",
+                    )
+                    SettingRow(
+                        title = "Sign-in security",
+                        subtitle = "Sessions, tokens and revoking access",
+                        icon = Icons.Filled.Lock,
+                        onClick = { nav.navigate(Routes.ACCOUNT_SECURITY) },
+                    )
+                }
+            }
+
+            item { SectionHeader(title = "Settings") }
+            item {
+                SettingsGroup {
+                    SettingRow(
+                        title = "General",
+                        subtitle = "Theme, layout and charts",
+                        icon = Icons.Filled.Settings,
+                        onClick = { nav.navigate(Routes.SETTINGS) },
+                    )
+                    SettingRow(
+                        title = "Appearance",
+                        subtitle = "Dark mode, theme mode and list density",
+                        icon = Icons.Filled.Palette,
+                        onClick = { nav.navigate(Routes.APPEARANCE) },
+                    )
+                    SettingRow(
+                        title = "Notifications",
+                        subtitle = "Download, install and update alerts",
+                        icon = Icons.Filled.Notifications,
+                        onClick = { nav.navigate(Routes.NOTIFICATIONS) },
+                    )
+                    SettingRow(
+                        title = "Network & data",
+                        subtitle = "Wi-Fi only, data saver and retries",
+                        icon = Icons.Filled.Wifi,
+                        onClick = { nav.navigate(Routes.NETWORK) },
+                    )
+                    SettingRow(
+                        title = "Download preferences",
+                        subtitle = "Checksums, cleanup and parallel downloads",
+                        icon = Icons.Filled.Tune,
+                        onClick = { nav.navigate(Routes.DOWNLOAD_SETTINGS) },
+                    )
+                    SettingRow(
+                        title = "Installer",
+                        subtitle = "Install permission, Shizuku, root and ADB",
+                        icon = Icons.Filled.Security,
+                        onClick = { nav.navigate(Routes.INSTALL_SETTINGS) },
+                    )
+                    SettingRow(
+                        title = "Storage",
+                        subtitle = "APKs kept and cleanup tools",
+                        icon = Icons.Filled.Storage,
+                        onClick = { nav.navigate(Routes.STORAGE) },
+                    )
+                    SettingRow(
+                        title = "Privacy",
+                        subtitle = "What Kiwi Store collects and stores",
+                        icon = Icons.Filled.PrivacyTip,
+                        onClick = { nav.navigate(Routes.PRIVACY) },
+                    )
+                    SettingRow(
+                        title = "Advanced",
+                        subtitle = "Cache, API host and diagnostics",
+                        icon = Icons.Filled.Tune,
+                        onClick = { nav.navigate(Routes.ADVANCED) },
+                    )
+                    SettingRow(
+                        title = "About this device",
+                        subtitle = "Android version, ABI and app id",
+                        icon = Icons.Filled.PhoneAndroid,
+                        onClick = { nav.navigate(Routes.DEVICE_INFO) },
+                    )
+                }
+            }
+
+            item { SectionHeader(title = "Support") }
+            item {
+                SettingsGroup {
+                    SettingRow(
+                        title = "Help & troubleshoot",
+                        subtitle = "Installs, downloads and account problems",
+                        icon = Icons.Filled.HelpOutline,
+                        onClick = { nav.navigate(Routes.HELP) },
+                    )
+                    SettingRow(
+                        title = "Send feedback",
+                        subtitle = "Tell the Gothwad team what to fix",
+                        icon = Icons.Filled.Feedback,
+                        onClick = { nav.navigate(Routes.FEEDBACK) },
+                    )
+                    SettingRow(
+                        title = "About Kiwi Store",
+                        subtitle = "Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                        icon = Icons.Filled.Info,
+                        onClick = { nav.navigate(Routes.ABOUT) },
+                    )
+                    SettingRow(
+                        title = "Terms & licences",
+                        subtitle = "Legal notices and open-source licences",
+                        icon = Icons.Filled.AccountCircle,
+                        onClick = { nav.navigate(Routes.LEGAL) },
+                    )
+                }
+            }
+
+            if (user != null) {
+                item {
+                    Column(Modifier.padding(Spacing.screenH)) {
+                        Spacer(Modifier.height(8.dp))
+                        OutlineButton(
+                            label = "Sign out of this device",
+                            icon = Icons.Filled.Logout,
+                            onClick = {
+                                scope.launch {
+                                    AppGraph.auth.signOut()
+                                    vm.emit(StoreEvent.Message("Signed out. Your local library stays on this device."))
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Spacer(Modifier.height(14.dp))
+                        Text(
+                            "Kiwi Store ${BuildConfig.VERSION_NAME} · signed in as ${user.username.ifBlank { user.id }}",
+                            fontSize = 11.sp,
+                            color = GothwadTheme.extra.textTertiary,
+                        )
+                    }
+                }
+            } else {
+                item {
+                    Column(Modifier.padding(Spacing.screenH)) {
+                        Spacer(Modifier.height(8.dp))
+                        OutlineButton(
+                            label = "Not signed in — tap to sign in",
+                            onClick = { nav.navigate(Routes.SIGN_IN) },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
                 }
             }
         }
@@ -358,7 +384,7 @@ private fun ProfileCard(
             modifier = Modifier
                 .size(62.dp)
                 .clip(RoundedCornerShape(20.dp))
-                .background(GothwadTheme.extra.successContainer),
+                .background(MaterialTheme.colorScheme.primaryContainer),
             contentAlignment = Alignment.Center,
         ) {
             if (picture != null) {

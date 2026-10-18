@@ -2,6 +2,7 @@
 
 > **App Name:** Kiwi Store
 > **Look:** EXACTLY like Google Play Store (2024 new UI)
+> **Brand colour:** sky blue `#0494F4` (the `#01875F` green values below are historical — take colours from `ui/theme/Color.kt`).
 > **Tabs (5):** Home | Apps | Search | Games | Profile
 > **Top Bar Rule:**
 >   - Home, Apps, Games, Profile → "Kiwi Store" title (bold, 20sp, #202124) + Profile avatar (32dp green circle, white "G") on right. NO search bar.

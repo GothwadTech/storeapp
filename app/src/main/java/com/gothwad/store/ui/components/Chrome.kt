@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -300,8 +299,11 @@ fun GothwadBottomBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                // Fixed height on purpose: the tab items use fillMaxHeight(), so
+                // a heightIn() row would size them to the Scaffold's maximum
+                // (the whole screen) and the bar would cover the header/content.
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                .heightIn(min = 80.dp)
+                .height(72.dp)
                 .testTag("bottom_bar"),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -340,7 +342,7 @@ private fun BottomTabItem(
             .padding(vertical = 6.dp)
             .testTag("tab_${spec.route}"),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(3.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterVertically),
     ) {
         Box(
             modifier = Modifier

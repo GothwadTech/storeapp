@@ -3,7 +3,7 @@
     <!-- Light, Play-Store-like window shell. Compose draws everything else. -->
     <style name="Theme.MyApplication" parent="android:Theme.DeviceDefault.Light.NoActionBar">
         <item name="android:windowBackground">@color/gothwad_window_background</item>
-        <item name="android:colorAccent">@color/gothwad_green</item>
+        <item name="android:colorAccent">@color/gothwad_accent</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>

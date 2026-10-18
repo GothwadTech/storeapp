@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.InstallMobile
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
@@ -139,8 +140,8 @@ fun VerifiedBadge() = PillLabel(
 @Composable
 fun UpdateBadge() = PillLabel(
     text = "Update",
-    background = PlayColors.BlueLight,
-    contentColor = PlayColors.Blue,
+    background = MaterialTheme.colorScheme.secondaryContainer,
+    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
     icon = Icons.Filled.InstallMobile,
 )
 
@@ -242,7 +243,7 @@ fun PlayChip(
         label = "chipBorder",
     )
     val background = animateColorAsState(
-        targetValue = if (selected) GothwadTheme.extra.successContainer else Color.Transparent,
+        targetValue = if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
         label = "chipBackground",
     )
     Row(
@@ -287,7 +288,7 @@ fun SegmentedRow(
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(50))
-                    .background(if (selected) GothwadTheme.extra.successContainer else Color.Transparent)
+                    .background(if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
                     .clickable { onSelect(index) }
                     .padding(vertical = 9.dp)
                     .then(Modifier),
@@ -378,15 +379,16 @@ fun InfoBanner(
     action: (@Composable () -> Unit)? = null,
 ) {
     val (container, accent) = when (tone) {
-        BannerTone.Info -> GothwadTheme.extra.successContainer to GothwadTheme.extra.success
+        BannerTone.Info -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.primary
         BannerTone.Warning -> GothwadTheme.extra.warningContainer to GothwadTheme.extra.warning
         BannerTone.Error -> PlayColors.ErrorContainer to MaterialTheme.colorScheme.error
         BannerTone.Success -> GothwadTheme.extra.successContainer to GothwadTheme.extra.success
     }
     val icon = when (tone) {
+        BannerTone.Info -> Icons.Filled.Info
         BannerTone.Error -> Icons.Filled.ErrorOutline
         BannerTone.Warning -> Icons.Filled.CloudOff
-        else -> Icons.Filled.CheckCircle
+        BannerTone.Success -> Icons.Filled.CheckCircle
     }
     Row(
         modifier = modifier

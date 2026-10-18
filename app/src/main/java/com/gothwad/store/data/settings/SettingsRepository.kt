@@ -76,6 +76,8 @@ data class Settings(
     val lastUpdateCheck: Long = 0,
     val onboardingDone: Boolean = false,
     val searchHistory: List<String> = emptyList(),
+    /** App ids the user opened, newest first. Shown at the bottom of Search. */
+    val recentlyViewed: List<String> = emptyList(),
 )
 
 private val Context.settingStore: DataStore<Preferences> by preferencesDataStore("gothwad_store_settings")
@@ -116,6 +118,7 @@ class SettingsRepository(private val context: Context) {
         // set cannot do that, so the terms live in one newline separated value.
         val searchHistory = stringPreferencesKey("search_history_ordered")
         val searchHistoryLegacy = stringSetPreferencesKey("search_history")
+        val recentlyViewed = stringPreferencesKey("recently_viewed_apps")
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -152,6 +155,7 @@ class SettingsRepository(private val context: Context) {
             lastUpdateCheck = prefs[Keys.lastUpdateCheck] ?: 0L,
             onboardingDone = prefs[Keys.onboarding] ?: false,
             searchHistory = readSearchHistory(prefs),
+            recentlyViewed = readRecentlyViewed(prefs),
         )
     }.stateIn(scope, SharingStarted.Eagerly, null)
 
@@ -204,6 +208,30 @@ class SettingsRepository(private val context: Context) {
         prefs.remove(Keys.searchHistory)
         prefs.remove(Keys.searchHistoryLegacy)
     }
+
+    /** Records an opened app id so Search can offer "Recently viewed". */
+    suspend fun addRecentlyViewed(appId: String) = edit { prefs ->
+        val clean = appId.trim()
+        if (clean.isEmpty()) return@edit
+        val current = readRecentlyViewed(prefs).toMutableList()
+        current.remove(clean)
+        current.add(0, clean)
+        prefs[Keys.recentlyViewed] = current.take(10).joinToString("\n")
+    }
+
+    suspend fun clearRecentlyViewed() = edit { prefs ->
+        prefs.remove(Keys.recentlyViewed)
+    }
+
+    /** Newest first, capped to the ten ids the UI may ever need. */
+    private fun readRecentlyViewed(prefs: androidx.datastore.preferences.core.Preferences): List<String> =
+        prefs[Keys.recentlyViewed]
+            ?.split('\n')
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.distinct()
+            ?.take(10)
+            .orEmpty()
 
     /** Newest first; falls back to the old unordered set for existing installs. */
     private fun readSearchHistory(prefs: androidx.datastore.preferences.core.Preferences): List<String> {

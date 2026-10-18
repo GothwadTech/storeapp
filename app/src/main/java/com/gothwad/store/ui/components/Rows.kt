@@ -45,10 +45,9 @@ import com.gothwad.store.data.model.StoreApp
 import com.gothwad.store.data.model.StoreRelease
 import com.gothwad.store.ui.InstallAction
 import com.gothwad.store.ui.theme.GothwadTheme
-import com.gothwad.store.ui.theme.PlayColors
 
 /**
- * The Play-store style install control: a green rounded button that turns into a
+ * The Play-store style install control: a brand-blue rounded button that turns into a
  * progress ring while downloading, then into "Open" once installed.
  */
 @Composable
@@ -72,7 +71,7 @@ fun InstallButton(
                     Modifier
                         .size(38.dp)
                         .clip(CircleShape)
-                        .background(GothwadTheme.extra.successContainer)
+                        .background(MaterialTheme.colorScheme.primaryContainer)
                         .clickable(onClick = onClick),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -92,7 +91,7 @@ fun InstallButton(
                 Modifier
                     .size(38.dp)
                     .clip(CircleShape)
-                    .background(GothwadTheme.extra.successContainer),
+                    .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
                 ProgressRing(progress = action.progress.coerceAtLeast(0.02f))
@@ -104,7 +103,7 @@ fun InstallButton(
                 Modifier
                     .size(38.dp)
                     .clip(CircleShape)
-                    .background(GothwadTheme.extra.successContainer),
+                    .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
                 ProgressRing(progress = 0.02f)
@@ -203,7 +202,7 @@ fun ProgressRing(progress: Float, modifier: Modifier = Modifier) {
         progress = { progress.coerceIn(0f, 1f) },
         modifier = modifier.size(38.dp),
         color = MaterialTheme.colorScheme.primary,
-        trackColor = GothwadTheme.extra.successContainer,
+        trackColor = MaterialTheme.colorScheme.primaryContainer,
         strokeWidth = 2.5.dp,
     )
 }
@@ -432,7 +431,7 @@ fun BannerCard(
             .clip(RoundedCornerShape(18.dp))
             .background(
                 Brush.linearGradient(
-                    listOf(PlayColors.BannerStart, PlayColors.BannerEnd),
+                    listOf(GothwadTheme.extra.bannerStart, GothwadTheme.extra.bannerEnd),
                 ),
             )
             .padding(18.dp),
