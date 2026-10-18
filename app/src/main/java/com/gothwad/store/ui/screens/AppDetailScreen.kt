@@ -604,7 +604,7 @@ private fun RatingSummary(detail: AppDetailResponse) {
 
 private fun shareApp(app: StoreApp) {
     val context = AppGraph.context()
-    val url = "${com.gothwad.store.BuildConfig.STORE_WEB_URL}app/${app.id}"
+    val url = "${com.gothwad.store.BuildConfig.STORE_WEB_URL}app/${android.net.Uri.encode(app.id)}"
     val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
         type = "text/plain"
         putExtra(android.content.Intent.EXTRA_SUBJECT, app.name)
