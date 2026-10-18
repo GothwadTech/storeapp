@@ -104,10 +104,10 @@ object Installers {
         )
         val uri: Uri = runCatching {
             FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-        }.getOrElse {
-            // Last resort: a file:// URI still works on some older devices.
-            Uri.fromFile(file)
-        }
+        }.getOrNull() ?: return InstallPhase.Failed(
+            "Kiwi Store cannot share this APK with Android's installer.",
+            "The downloaded file is outside the app folder — download it again and retry.",
+        )
         val viewIntent = Intent(Intent.ACTION_VIEW).apply {
             setDataAndType(uri, "application/vnd.android.package-archive")
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)

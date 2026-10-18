@@ -1,5 +1,10 @@
 package com.gothwad.store.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -39,10 +44,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
@@ -93,6 +100,56 @@ private enum class DownloadTab(val label: String) {
 }
 
 /** "Manage downloads" — the live queue with pause/resume/retry/install controls. */
+/**
+ * Saves a finished APK in the public Downloads folder.
+ *
+ * Android 10+ writes through MediaStore and needs no permission. Android 9 and
+ * older need the legacy storage permission, which is requested the first time
+ * the user exports an APK.
+ */
+@Composable
+private fun rememberExportApk(vm: StoreViewModel): (DownloadTask) -> Unit {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var pending by remember { mutableStateOf<DownloadTask?>(null) }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        val task = pending
+        pending = null
+        if (granted && task != null) {
+            scope.launch {
+                AppGraph.downloader.exportToDownloads(task)
+                    .onSuccess { vm.emit(StoreEvent.Message(it)) }
+                    .onFailure { vm.emit(StoreEvent.Message(it.message ?: "Export failed.")) }
+            }
+        } else {
+            vm.emit(
+                StoreEvent.Message(
+                    "Kiwi Store needs the storage permission to save an APK in the Downloads folder.",
+                ),
+            )
+        }
+    }
+    return { task ->
+        scope.launch {
+            val needsPermission = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                ) != PackageManager.PERMISSION_GRANTED
+            if (needsPermission) {
+                pending = task
+                permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            } else {
+                AppGraph.downloader.exportToDownloads(task)
+                    .onSuccess { vm.emit(StoreEvent.Message(it)) }
+                    .onFailure { vm.emit(StoreEvent.Message(it.message ?: "Export failed.")) }
+            }
+        }
+    }
+}
+
 @Composable
 fun DownloadsScreen(vm: StoreViewModel, nav: NavController) {
     val tasks by vm.downloads.collectAsStateWithLifecycle()
@@ -101,6 +158,7 @@ fun DownloadsScreen(vm: StoreViewModel, nav: NavController) {
     var tab by rememberSaveable { mutableStateOf(DownloadTab.Active) }
     var confirmCancel by rememberSaveable { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
+    val exportApk = rememberExportApk(vm)
 
     LaunchedEffect(Unit) { AppGraph.downloads.load() }
 
@@ -196,13 +254,7 @@ fun DownloadsScreen(vm: StoreViewModel, nav: NavController) {
                                         vm.emit(StoreEvent.Message("No APK file is available to open."))
                                     }
                                 },
-                                onExport = {
-                                    scope.launch {
-                                        AppGraph.downloader.exportToDownloads(task)
-                                            .onSuccess { vm.emit(StoreEvent.Message(it)) }
-                                            .onFailure { vm.emit(StoreEvent.Message(it.message ?: "Export failed.")) }
-                                    }
-                                },
+                                onExport = { exportApk(task) },
                                 onDelete = {
                                     scope.launch {
                                         AppGraph.downloader.remove(task.id)
@@ -432,6 +484,7 @@ fun DownloadHistoryScreen(vm: StoreViewModel, nav: NavController) {
     val tasks by vm.downloads.collectAsStateWithLifecycle()
     val settings by AppGraph.settings.settings.collectAsStateWithLifecycle(initialValue = null)
     val scope = rememberCoroutineScope()
+    val exportApk = rememberExportApk(vm)
 
     GothwadScaffold(
         topBar = {
@@ -505,13 +558,7 @@ fun DownloadHistoryScreen(vm: StoreViewModel, nav: NavController) {
                         Spacer(Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             TextButtonMini("Details", onClick = { nav.navigate(Routes.app(task.appId)) }, enabled = task.appId.isNotBlank())
-                            TextButtonMini("Save to Downloads", onClick = {
-                                scope.launch {
-                                    AppGraph.downloader.exportToDownloads(task)
-                                        .onSuccess { vm.emit(StoreEvent.Message(it)) }
-                                        .onFailure { vm.emit(StoreEvent.Message(it.message ?: "Export failed.")) }
-                                }
-                            }, enabled = task.filePath != null)
+                            TextButtonMini("Save to Downloads", onClick = { exportApk(task) }, enabled = task.filePath != null)
                             TextButtonMini("Remove", danger = true, onClick = {
                                 scope.launch { AppGraph.downloader.remove(task.id) }
                             })

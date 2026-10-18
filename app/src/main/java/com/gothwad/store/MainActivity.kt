@@ -11,6 +11,7 @@ import com.gothwad.store.core.AppGraph
 import com.gothwad.store.data.settings.ThemeMode
 import com.gothwad.store.ui.KiwiApp
 import com.gothwad.store.ui.theme.KiwiStoreTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -26,6 +27,13 @@ class MainActivity : ComponentActivity() {
                 KiwiApp()
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Apps can be installed or removed outside Kiwi Store, so the
+        // "installed" map is refreshed whenever the app comes back.
+        AppGraph.appScope.launch { AppGraph.library.refreshInstalled() }
     }
 
     override fun onNewIntent(intent: Intent) {

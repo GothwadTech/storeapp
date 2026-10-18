@@ -71,7 +71,7 @@ class InstallEngine(private val appContext: Context, private val apkDirProvider:
             runCatching {
                 val process = ProcessBuilder("su", "-c", "id").redirectErrorStream(true).start()
                 if (!process.awaitExit(6)) {
-                    process.destroy()
+                    process.terminate()
                     return@runCatching false
                 }
                 val output = process.inputStream.bufferedReader().readText()

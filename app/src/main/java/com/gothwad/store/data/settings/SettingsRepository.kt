@@ -112,7 +112,10 @@ class SettingsRepository(private val context: Context) {
         val historyEnabled = booleanPreferencesKey("history_enabled")
         val lastUpdateCheck = longPreferencesKey("last_update_check")
         val onboarding = booleanPreferencesKey("onboarding_done")
-        val searchHistory = stringSetPreferencesKey("search_history")
+        // The search history keeps the user's order (newest first). A string
+        // set cannot do that, so the terms live in one newline separated value.
+        val searchHistory = stringPreferencesKey("search_history_ordered")
+        val searchHistoryLegacy = stringSetPreferencesKey("search_history")
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -148,7 +151,7 @@ class SettingsRepository(private val context: Context) {
             historyEnabled = prefs[Keys.historyEnabled] ?: true,
             lastUpdateCheck = prefs[Keys.lastUpdateCheck] ?: 0L,
             onboardingDone = prefs[Keys.onboarding] ?: false,
-            searchHistory = prefs[Keys.searchHistory]?.toList()?.sorted() ?: emptyList(),
+            searchHistory = readSearchHistory(prefs),
         )
     }.stateIn(scope, SharingStarted.Eagerly, null)
 
@@ -187,19 +190,39 @@ class SettingsRepository(private val context: Context) {
     suspend fun addSearchTerm(term: String) = edit { prefs ->
         val clean = term.trim()
         if (clean.length < 2) return@edit
-        val current = prefs[Keys.searchHistory].orEmpty().toMutableList()
+        val current = readSearchHistory(prefs).toMutableList()
         current.remove(clean)
         current.add(0, clean)
-        prefs[Keys.searchHistory] = current.take(12).toSet()
+        writeSearchHistory(prefs, current.take(12))
     }
 
     suspend fun removeSearchTerm(term: String) = edit { prefs ->
-        val current = prefs[Keys.searchHistory].orEmpty().toMutableSet()
-        current.remove(term)
-        prefs[Keys.searchHistory] = current
+        writeSearchHistory(prefs, readSearchHistory(prefs).filterNot { it == term })
     }
 
-    suspend fun clearSearchHistory() = edit { it.remove(Keys.searchHistory) }
+    suspend fun clearSearchHistory() = edit { prefs ->
+        prefs.remove(Keys.searchHistory)
+        prefs.remove(Keys.searchHistoryLegacy)
+    }
+
+    /** Newest first; falls back to the old unordered set for existing installs. */
+    private fun readSearchHistory(prefs: androidx.datastore.preferences.core.Preferences): List<String> {
+        val ordered = prefs[Keys.searchHistory]
+            ?.split('\n')
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            .orEmpty()
+        if (ordered.isNotEmpty()) return ordered
+        return prefs[Keys.searchHistoryLegacy].orEmpty().sorted()
+    }
+
+    private fun writeSearchHistory(
+        prefs: androidx.datastore.preferences.core.MutablePreferences,
+        terms: List<String>,
+    ) {
+        prefs[Keys.searchHistory] = terms.joinToString("\n")
+        prefs.remove(Keys.searchHistoryLegacy)
+    }
 
     suspend fun resetDownloadPreferences() = edit {
         it[Keys.wifiOnly] = false

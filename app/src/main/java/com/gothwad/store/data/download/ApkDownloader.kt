@@ -41,12 +41,12 @@ class ApkDownloader(
         method: InstallMethod,
         autoInstall: Boolean,
     ): DownloadTask {
-        val fileName = buildString {
-            append(app.packageName.ifBlank { app.id }.replace(Regex("[^A-Za-z0-9._-]"), "_"))
-            append("-")
-            append(release.versionName.ifBlank { release.versionCode.toString() })
-            append(".apk")
-        }
+        val fileName = apkFileName(
+            packageName = app.packageName,
+            appId = app.id,
+            versionName = release.versionName,
+            versionCode = release.versionCode,
+        )
         val existing = store.find(app.id)
         val task = DownloadTask(
             id = app.id,
@@ -105,14 +105,24 @@ class ApkDownloader(
     fun usedBytes(): Long = store.usedBytes()
     fun pruneOrphans(): Long = store.pruneOrphanFiles()
 
+    /**
+     * A content:// URI for the downloaded APK.
+     *
+     * `file://` URIs are rejected by Android 7+ (FileUriExposedException), so
+     * the FileProvider URI is the only safe way to hand an APK to another app.
+     */
+    private fun apkUri(task: DownloadTask): Uri? {
+        val path = task.filePath ?: return null
+        val file = File(path)
+        if (!file.exists()) return null
+        return runCatching {
+            FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+        }.getOrNull()
+    }
+
     /** Opens the downloaded APK with whatever package installer the user has. */
     fun openApk(task: DownloadTask): Boolean {
-        val path = task.filePath ?: return false
-        val file = File(path)
-        if (!file.exists()) return false
-        val uri = runCatching {
-            FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-        }.getOrElse { Uri.fromFile(file) }
+        val uri = apkUri(task) ?: return false
         val intent = Intent(Intent.ACTION_VIEW).apply {
             setDataAndType(uri, "application/vnd.android.package-archive")
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -126,12 +136,7 @@ class ApkDownloader(
     }
 
     fun shareApk(task: DownloadTask): Boolean {
-        val path = task.filePath ?: return false
-        val file = File(path)
-        if (!file.exists()) return false
-        val uri = runCatching {
-            FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-        }.getOrElse { Uri.fromFile(file) }
+        val uri = apkUri(task) ?: return false
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "application/vnd.android.package-archive"
             putExtra(Intent.EXTRA_STREAM, uri)
@@ -196,6 +201,31 @@ class ApkDownloader(
             store.update(task.id) {
                 it.copy(status = DownloadStatus.INSTALLED, updatedAt = System.currentTimeMillis(), error = null)
             }
+        }
+    }
+
+    companion object {
+        /**
+         * File name of a downloaded APK.
+         *
+         * The package name and the version name both come from the publisher
+         * and may contain characters that are illegal in a file name (spaces,
+         * slashes, umlauts...), so everything outside `[A-Za-z0-9._-]` is
+         * replaced and the result is capped.
+         */
+        internal fun apkFileName(
+            packageName: String,
+            appId: String,
+            versionName: String,
+            versionCode: Long,
+        ): String {
+            val base = buildString {
+                append(packageName.ifBlank { appId })
+                append("-")
+                append(versionName.ifBlank { versionCode.toString() })
+            }.replace(Regex("[^A-Za-z0-9._-]"), "_")
+            val trimmed = base.trim('-', '_', '.').trim().take(100)
+            return (trimmed.ifBlank { "kiwi-store" }) + ".apk"
         }
     }
 }

@@ -74,7 +74,13 @@ class ApkDownloadService : Service() {
 
     private fun start(taskId: String) {
         if (jobs[taskId]?.isActive == true) return
-        val task = AppGraph.downloads.find(taskId) ?: return
+        val task = AppGraph.downloads.find(taskId)
+        if (task == null) {
+            // Nothing to download (the job was removed meanwhile): do not keep
+            // a foreground service alive for it.
+            stopIfIdle()
+            return
+        }
         jobs[taskId] = scope.launch {
             try {
                 download(task)
@@ -125,7 +131,13 @@ class ApkDownloadService : Service() {
         val store = AppGraph.downloads
         val target = File(store.apkDir, task.fileName.ifBlank { "${task.id}.apk" })
         val existing = if (target.exists()) target.length() else 0L
-        if (task.totalBytes > 0 && existing >= task.totalBytes && existing > 0) {
+        // A finished job whose file is still on disk does not have to be
+        // downloaded again, even when the publisher did not report a size.
+        val alreadyComplete = existing > 0 && (
+            (task.totalBytes > 0 && existing >= task.totalBytes) ||
+                (task.totalBytes <= 0 && task.status == DownloadStatus.COMPLETED)
+            )
+        if (alreadyComplete) {
             store.update(task.id) {
                 it.copy(
                     status = DownloadStatus.COMPLETED,
@@ -318,11 +330,51 @@ class ApkDownloadService : Service() {
                 this.action = action
                 if (taskId != null) putExtra(EXTRA_ID, taskId)
             }
-            runCatching {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Starting a foreground service is only allowed while the app is in
+            // the foreground (Android 12+ blocks background starts), so control
+            // actions use a plain service start and fall back to updating the
+            // job state directly when the service is not running any more.
+            val needsForeground = action == ACTION_START || action == ACTION_RESUME || action == ACTION_RETRY
+            val started = runCatching {
+                if (needsForeground && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     context.startForegroundService(intent)
                 } else {
                     context.startService(intent)
+                }
+            }.isSuccess
+            if (!started && taskId != null) {
+                AppGraph.appScope.launch {
+                    runCatching {
+                        when (action) {
+                            ACTION_PAUSE -> AppGraph.downloads.update(taskId) {
+                                it.copy(status = DownloadStatus.PAUSED, updatedAt = System.currentTimeMillis())
+                            }
+                            ACTION_CANCEL -> AppGraph.downloads.update(taskId) {
+                                it.copy(
+                                    status = DownloadStatus.CANCELLED,
+                                    bytesDownloaded = 0,
+                                    filePath = null,
+                                    updatedAt = System.currentTimeMillis(),
+                                )
+                            }
+                            ACTION_START, ACTION_RESUME, ACTION_RETRY -> {
+                                // Android refused to start the download service from
+                                // the background. Keep the job queued so the user can
+                                // press Resume inside the app.
+                                AppGraph.downloads.update(taskId) {
+                                    it.copy(status = DownloadStatus.QUEUED, updatedAt = System.currentTimeMillis())
+                                }
+                                val task = AppGraph.downloads.find(taskId)
+                                if (task != null && AppGraph.settings.current.notifyDownloads) {
+                                    context.getSystemService(NotificationManager::class.java)
+                                        ?.notify(
+                                            taskId.hashCode(),
+                                            DownloadNotifications.paused(context, task),
+                                        )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -1,26 +1,30 @@
 # Browser-style Store build and release workflows
 
-Adapted from `GothwadTech/browser/.github/workflows/{build_apk,quality,release}.yml`.
+Adapted from `GothwadTech/browser/.github/workflows/{build_apk,quality,release}.yml`
+and `GothwadTech/launcher/.github/workflows/{build_apk,release}.yml`.
 The same Android flow is retained: JDK 17 → automatic/manual version → Release
 APK + Debug APK + AAB → signing and verification → artifacts → GitHub Release.
-Names are `KiwiStore-*` / `Gothwad-Store-*`, not `GothwadTVBrowser-*`.
 Browser-only Linux/Windows/macOS package scripts are intentionally not copied.
 
 ## Workflows
 
-- **Build Kiwi Store Signed APK & AAB** (`build_apk.yml`): runs on `main` and
-  the Arena working branch, or manually. Includes a read-only production Worker
-  API smoke check, JVM/UI tests, lint, APK/AAB build, APK signature/alignment
-  verification and AAB signature verification. Downloads are not triggered by CI.
+- **Build Signed Release APK & Play Store AAB** (`build_apk.yml`): runs on
+  **every push to `main`** (and `master`), on a `v*` tag through `release.yml`,
+  or manually. Includes a read-only production Worker API smoke check,
+  JVM/UI tests, lint, APK/AAB build, APK signature/alignment verification and
+  AAB signature verification. Downloads are not triggered by CI.
 - **Kiwi Store Quality Gate & Tests** (`quality.yml`): PRs, main pushes and
   manual runs; tests/debug compile/lint. Lint failures are not ignored.
 - **Release Kiwi Store to GitHub Releases** (`release.yml`): `v*` tags or
   manual run. Calls the same build workflow instead of duplicating signing code.
 
 GitHub automatically creates the normal `GITHUB_TOKEN`; do not add a PAT.
-Feature-branch pushes upload artifacts but do **not** create a GitHub release.
-Main pushes publish; manual builds publish only when `publish_release` is true.
-Branch builds and temporary-key builds are always marked prerelease.
+
+**Every commit on `main` produces a published GitHub Release** (tag
+`v1.0.<code>`, name `v1.0.<code>`, not a draft, not a prerelease) with the
+signed APK, the Debug APK, the Play Store AAB, `SIGNING.txt` and
+`SHA256SUMS.txt` attached - exactly like the Browser and Launcher repos.
+Tag and manual runs publish the same way.
 
 ## Permanent signing (GitHub Actions repository secrets)
 
@@ -40,21 +44,21 @@ Do not assume Browser's signing identity is Store's existing signing identity.
 If Store has previously been distributed, reuse its existing key for updates.
 
 If no permanent key is configured, matching Browser's fallback behavior, CI
-creates a temporary signing key **for testing only**, deletes it after signing,
-and labels output `TestRelease`. It never labels this artifact a production
-Release. Installing another run's TestRelease or Debug APK may require uninstall
-(and lose app data), because CI signing keys change. Do not distribute these as
-an update-stable release. A configured but invalid/incomplete permanent key
-fails the job; it does not silently fall back to another identity.
+creates a temporary signing key **for testing only** and deletes it after
+signing. Such a build installs and works, but a later permanent-key build
+cannot update it: the user has to uninstall first (app data is lost).
+`SIGNING.txt` and the release notes state which key was used, so a
+temporary-key build is never passed off as update-stable. A configured but
+invalid/incomplete permanent key fails the job; it does not silently fall back
+to another identity.
 
 ## Output files
 
-Artifact: `Gothwad-Store-v<version>-Build<code>`
+Artifact: `KiwiStore-v<version>-Build<code>`
 
-- `KiwiStore-v<version>-Release.apk` with permanent key; otherwise
-  `KiwiStore-v<version>-TestRelease.apk`.
+- `KiwiStore-v<version>-Release.apk` - the signed, installable build.
 - `KiwiStore-v<version>-Debug.apk` (development/testing only).
-- Matching signed `Release.aab` / `TestRelease.aab`. AAB is an upload bundle,
+- `KiwiStore-v<version>-PlayStore.aab` - a signed upload bundle. An AAB is
   **not directly installable** and does not imply Play Store approval.
 - `SHA256SUMS.txt` and `SIGNING.txt`.
 
@@ -62,18 +66,20 @@ Reports (including `gradle.log`) are a separate artifact. Keys/passwords never
 belong in uploaded outputs. Temporary keys are kept under runner temp and removed
 by a shell EXIT trap, including signing failures.
 
-## Versions and local build
+## Versions
 
-Gradle now actually consumes `-PversionCode` and `-PversionName`, unlike the
-original Store skeleton that hardcoded both. Automatic values follow Browser:
-`github.run_number` and `1.0.<code>`. Inputs are passed as environment variables
-and validated before use; unsafe shell snippets are rejected.
+`scripts/ci/version.sh` resolves the version before the build:
 
-**For releases, explicitly supply a code higher than all previously distributed
-builds.** GitHub run counters are per workflow, not a global version authority;
-tag/manual release runs can have a lower counter than main's build workflow.
-Rerunning the same run also reuses its code. No workflow can infer which APKs
-have already been distributed privately.
+- the version code is `github.run_number` by default, but it is always raised
+  above the highest published release tag (`v<version>`), because a
+  tag-triggered run re-uses the run number of the calling workflow and would
+  otherwise publish a *lower* version code that Android rejects as a
+  downgrade;
+- the version name is `1.0.<code>` unless one is supplied;
+- both are validated before they reach Gradle (`-PversionCode`, `-PversionName`).
+
+**For a manual release, supply a code higher than all previously distributed
+builds.** No workflow can infer which APKs were distributed privately.
 
 ```sh
 ./gradlew testDebugUnitTest lintDebug assembleDebug \
@@ -90,20 +96,16 @@ and `KEY_PASSWORD`.
 A green run verifies compilation/tests/lint, public API shape, signing and
 artifact packaging. It does **not** verify all device/OEM installer behaviors,
 account login, wishlist/library, review posting, checksum enforcement or update
-handling. Those native features are still outstanding; see
-`ANDROID_INTEGRATION.md`. A signed APK is not automatically web-feature-parity
-or production-ready.
+handling. A signed APK is not automatically web-feature-parity or
+production-ready.
 
-## Verified run — 2026-10-16
+## Verified runs
 
-[Run 38869108860](https://github.com/GothwadTech/storeapp/actions/runs/38869108860)
-completed successfully for code commit `7074039` on the Arena branch.
-Production API smoke check, unit/Compose tests, lint, Release/Debug APK and AAB
-build, APK signing/alignment verification, AAB signing verification and artifact
-upload all passed (6m23s). This is build/contract verification, not a device test.
-
-Download: [Gothwad-Store-v1.0.2-Build2](https://github.com/GothwadTech/storeapp/actions/runs/38869108860/artifacts/12032164722).
-It contains the signed **TestRelease** APK/AAB, Debug APK, SIGNING.txt and
-SHA256SUMS.txt. The permanent keystore was not configured in this run. Do not
-ship it as an update-stable production release. The sandbox cannot download
-Azure-hosted Actions artifact blobs; use the GitHub artifact link above.
+- 2026-10-16: [run 38869108860](https://github.com/GothwadTech/storeapp/actions/runs/38869108860)
+  - production API smoke check, unit/Compose tests, lint, Release/Debug APK and
+    AAB build, APK signing/alignment verification, AAB signing verification and
+    artifact upload all passed. This is build/contract verification, not a
+    device test.
+- 2026-10-18: the workflows were rewritten to the Browser/Launcher shape - every
+  push to `main` publishes a release - and the launcher icon set was replaced
+  with the Icon Kitchen assets.
