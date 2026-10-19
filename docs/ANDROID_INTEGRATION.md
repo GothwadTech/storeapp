@@ -69,6 +69,29 @@ validation, implement secure token storage excluded from backup, session
 validation/expiry and logout. Then wire `/me`, wishlist/library and review/report
 mutations. No tokens, fake user or sign-in success are persisted by this phase.
 
+## Account redirect (native OAuth)
+
+| Setting | Value |
+| --- | --- |
+| Client id | `kiwi-store` (`OAUTH_CLIENT_ID`, override with `-POAUTH_CLIENT_ID=...`) |
+| Redirect URI | `kiwistore://oauth/callback` (`OAUTH_REDIRECT_URI` in `app/build.gradle.kts`) |
+| Authorize endpoint | `<ACCOUNTS_API_BASE_URL>oauth/authorize` (Authorization Code + PKCE S256) |
+| Token endpoint | `<ACCOUNTS_API_BASE_URL>oauth/token` with the same `redirect_uri` |
+
+The manifest declares a VIEW/BROWSABLE intent filter for the `kiwistore`
+scheme. It also keeps a `gothwadstore` filter as a transition aid: releases
+before the rename handed the callback to `gothwadstore://oauth/callback`, and
+an app update can land while such a sign-in is in flight. `AuthManager`
+accepts that legacy scheme only for this window — the request built in
+`authorizeUrl` and the code exchange in `exchangeCode` always use the
+`kiwistore` value from `BuildConfig`. Remove both the legacy filter and
+`AuthManager.LEGACY_OAUTH_SCHEME` together once no old build is in use, and
+unregister the old URI in Accounts at the same time.
+
+Accounts must have both redirect URIs registered while the transition lasts;
+an unregistered `redirect_uri` makes the token exchange fail even though the
+browser handed the code back to the app.
+
 ## Tests and verification status
 
 Added MockWebServer tests for query encoding, published-only results,

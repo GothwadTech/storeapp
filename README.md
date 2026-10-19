@@ -35,7 +35,11 @@ The app never connects directly to Supabase and includes no backend credentials.
 - Explicit loading, empty, unavailable and retry states. **No demo fallback**.
 - Gothwad Accounts sign-in (OAuth 2.0 Authorization Code + PKCE) is wired to
   the real Accounts service, so the wishlist, the account library and reviews
-  are stored in the Worker.
+  are stored in the Worker. The native redirect is
+  `kiwistore://oauth/callback` with client id `kiwi-store`; logins started by
+  older builds that still use `gothwadstore://oauth/callback` are accepted
+  during the transition, so both URIs have to be registered in Accounts until
+  those builds are gone.
 
 Legacy demo screen files remain for design reference but are not reachable from
 `MainActivity → MainStoreScreen`.

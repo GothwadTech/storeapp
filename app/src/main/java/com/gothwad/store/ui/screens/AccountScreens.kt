@@ -506,7 +506,7 @@ fun SignInScreen(vm: StoreViewModel, nav: NavController) {
                     )
                     com.gothwad.store.ui.components.IconTextRow(
                         Icons.Filled.AccountCircle,
-                        "After you approve, Android returns to gothwadstore://oauth/callback and the app " +
+                        "After you approve, Android returns to kiwistore://oauth/callback and the app " +
                             "exchanges the one-time code for tokens.",
                     )
                     com.gothwad.store.ui.components.IconTextRow(
