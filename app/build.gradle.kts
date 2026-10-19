@@ -38,7 +38,9 @@ android {
     buildConfigField("String", "ACCOUNTS_SIGNIN_URL", "\"${httpsProperty("ACCOUNTS_SIGNIN_URL", "https://accounts.gothwadtech.com/")}\"")
     buildConfigField("String", "SHIZUKU_DOWNLOAD_URL", "\"${httpsProperty("SHIZUKU_DOWNLOAD_URL", "https://shizuku.rikka.app/")}\"")
     buildConfigField("String", "OAUTH_CLIENT_ID", "\"${providers.gradleProperty("OAUTH_CLIENT_ID").orElse("kiwi-store").get()}\"")
-    buildConfigField("String", "OAUTH_REDIRECT_URI", "\"gothwadstore://oauth/callback\"")
+    // Native redirect registered with Gothwad Accounts. Must match the
+    // `kiwistore` VIEW intent filter in AndroidManifest.xml.
+    buildConfigField("String", "OAUTH_REDIRECT_URI", "\"kiwistore://oauth/callback\"")
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

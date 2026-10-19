@@ -20,6 +20,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
@@ -42,12 +43,21 @@ sealed interface AuthState {
  *
  * OAuth 2.0 Authorization Code + PKCE, exactly like the web storefront: the
  * browser (Custom Tab) hits Accounts, Accounts redirects back to
- * `gothwadstore://oauth/callback`, and the app exchanges the code for tokens.
+ * `kiwistore://oauth/callback`, and the app exchanges the code for tokens.
  * No client secret ever ships in the APK, and no Supabase key is involved.
+ *
+ * Transition: builds released before the scheme rename registered
+ * `gothwadstore://oauth/callback`. [handleRedirect] still accepts that scheme
+ * so a sign-in started by an old APK can finish after updating; the matching
+ * legacy intent filter lives in `AndroidManifest.xml`. Both go away together.
  */
-class AuthManager(private val context: Context) {
+class AuthManager(
+    private val context: Context,
+    private val accountsBaseUrl: String = BuildConfig.ACCOUNTS_API_BASE_URL,
+    httpClient: OkHttpClient = StoreNetwork.downloadClient,
+) {
 
-    private val prefs = context.getSharedPreferences("gothwad_accounts", Context.MODE_PRIVATE)
+    private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val refreshMutex = Mutex()
 
     private val _state = MutableStateFlow<AuthState>(AuthState.Loading)
@@ -56,7 +66,7 @@ class AuthManager(private val context: Context) {
     private val _lastError = MutableStateFlow<String?>(null)
     val lastError: StateFlow<String?> = _lastError.asStateFlow()
 
-    private val client = StoreNetwork.downloadClient.newBuilder()
+    private val client = httpClient.newBuilder()
         .callTimeout(45, TimeUnit.SECONDS)
         .build()
 
@@ -67,25 +77,13 @@ class AuthManager(private val context: Context) {
     }
 
     // ── Sign-in ────────────────────────────────────────────────────────────
-    fun startSignIn(scope: String = "profile email offline_access"): Result<Unit> = runCatching {
+    fun startSignIn(scope: String = DEFAULT_SCOPE): Result<Unit> = runCatching {
         val verifier = randomUrlSafe(32)
         val challenge = base64Url(MessageDigest.getInstance("SHA-256").digest(verifier.toByteArray()))
         val state = randomUrlSafe(16)
-        prefs.edit()
-            .putString(KEY_VERIFIER, verifier)
-            .putString(KEY_STATE, state)
-            .putLong(KEY_STARTED, System.currentTimeMillis())
-            .apply()
+        rememberPendingSignIn(verifier, state)
 
-        val url = Uri.parse("${BuildConfig.ACCOUNTS_API_BASE_URL}oauth/authorize").buildUpon()
-            .appendQueryParameter("client_id", BuildConfig.OAUTH_CLIENT_ID)
-            .appendQueryParameter("redirect_uri", BuildConfig.OAUTH_REDIRECT_URI)
-            .appendQueryParameter("response_type", "code")
-            .appendQueryParameter("scope", scope)
-            .appendQueryParameter("state", state)
-            .appendQueryParameter("code_challenge", challenge)
-            .appendQueryParameter("code_challenge_method", "S256")
-            .build()
+        val url = authorizeUrl(scope, state, challenge)
 
         val customTabs = CustomTabsIntent.Builder()
             .setShowTitle(true)
@@ -99,9 +97,39 @@ class AuthManager(private val context: Context) {
         }
     }
 
-    /** @return true when the deep link belonged to the OAuth callback. */
+    /**
+     * Stores a pending PKCE session. [startSignIn] uses it, and unit tests use
+     * it to exercise [exchangeCode] without opening a Custom Tab.
+     */
+    internal fun rememberPendingSignIn(verifier: String, state: String) {
+        prefs.edit()
+            .putString(KEY_VERIFIER, verifier)
+            .putString(KEY_STATE, state)
+            .putLong(KEY_STARTED, System.currentTimeMillis())
+            .apply()
+    }
+
+    /** Accounts consent URL; `redirect_uri` must match [BuildConfig.OAUTH_REDIRECT_URI]. */
+    internal fun authorizeUrl(scope: String, state: String, codeChallenge: String): Uri =
+        Uri.parse("${accountsBaseUrl}oauth/authorize").buildUpon()
+            .appendQueryParameter("client_id", BuildConfig.OAUTH_CLIENT_ID)
+            .appendQueryParameter("redirect_uri", BuildConfig.OAUTH_REDIRECT_URI)
+            .appendQueryParameter("response_type", "code")
+            .appendQueryParameter("scope", scope)
+            .appendQueryParameter("state", state)
+            .appendQueryParameter("code_challenge", codeChallenge)
+            .appendQueryParameter("code_challenge_method", "S256")
+            .build()
+
+    /**
+     * @return true when the deep link belonged to the OAuth callback.
+     *
+     * Only the current `kiwistore` scheme (plus the legacy `gothwadstore`
+     * scheme for the transition window) is accepted; anything else is ignored.
+     */
     fun handleRedirect(uri: Uri): Boolean {
-        if (uri.scheme != "gothwadstore" || uri.host != "oauth") return false
+        if (!isOAuthCallback(uri)) return false
+
         val error = uri.getQueryParameter("error")
         if (error != null) {
             _lastError.value = "Gothwad sign-in was cancelled ($error)."
@@ -129,6 +157,16 @@ class AuthManager(private val context: Context) {
         return true
     }
 
+    /**
+     * True only for `kiwistore://oauth/callback` and the transition-only
+     * `gothwadstore://oauth/callback`. The host and path are checked too, so a
+     * look-alike scheme or a different deep link never reaches the token code.
+     */
+    internal fun isOAuthCallback(uri: Uri): Boolean =
+        uri.host == "oauth" &&
+            uri.path.orEmpty().startsWith("/callback") &&
+            uri.scheme in OAUTH_SCHEMES
+
     suspend fun exchangeCode(code: String) {
         val verifier = prefs.getString(KEY_VERIFIER, null)
             ?: error("Sign-in session expired. Please tap Sign in again.")
@@ -139,7 +177,7 @@ class AuthManager(private val context: Context) {
             .put("client_id", BuildConfig.OAUTH_CLIENT_ID)
             .put("code_verifier", verifier)
             .toString()
-        val json = postJson("${BuildConfig.ACCOUNTS_API_BASE_URL}oauth/token", body, null)
+        val json = postJson("${accountsBaseUrl}oauth/token", body, null)
         val access = json.optString("access_token").takeIf { it.isNotBlank() }
             ?: error("Gothwad Accounts returned no access token.")
         val refresh = json.optString("refresh_token").takeIf { it.isNotBlank() }
@@ -218,7 +256,7 @@ class AuthManager(private val context: Context) {
             .put("refresh_token", refreshToken)
             .put("client_id", BuildConfig.OAUTH_CLIENT_ID)
             .toString()
-        val json = postJson("${BuildConfig.ACCOUNTS_API_BASE_URL}oauth/token", body, null)
+        val json = postJson("${accountsBaseUrl}oauth/token", body, null)
         val access = json.optString("access_token").takeIf { it.isNotBlank() }
             ?: error("Token refresh failed.")
         val newRefresh = json.optString("refresh_token").takeIf { it.isNotBlank() } ?: refreshToken
@@ -233,7 +271,7 @@ class AuthManager(private val context: Context) {
     private suspend fun fetchUserInfo(): GothwadUser? {
         val token = accessTokenBlocking() ?: return null
         val request = Request.Builder()
-            .url("${BuildConfig.ACCOUNTS_API_BASE_URL}oauth/userinfo")
+            .url("${accountsBaseUrl}oauth/userinfo")
             .header("Authorization", "Bearer $token")
             .header("Accept", "application/json")
             .build()
@@ -281,16 +319,30 @@ class AuthManager(private val context: Context) {
     private fun base64Url(bytes: ByteArray): String =
         Base64.encodeToString(bytes, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
 
-    private companion object {
-        const val KEY_ACCESS = "access_token"
-        const val KEY_REFRESH = "refresh_token"
-        const val KEY_EXPIRES_AT = "expires_at"
-        const val KEY_VERIFIER = "pkce_verifier"
-        const val KEY_STATE = "oauth_state"
-        const val KEY_STARTED = "started_at"
+    internal companion object {
+        /** Current OAuth redirect scheme; must match `BuildConfig.OAUTH_REDIRECT_URI`. */
+        const val OAUTH_SCHEME = "kiwistore"
+
+        /**
+         * Transition only: builds released before the rename sent Accounts back
+         * with this scheme. It is accepted so their in-flight sign-ins can
+         * finish after the update. Remove it together with the legacy intent
+         * filter in `AndroidManifest.xml` once no such build is in circulation.
+         */
+        const val LEGACY_OAUTH_SCHEME = "gothwadstore"
+
+        private val OAUTH_SCHEMES = setOf(OAUTH_SCHEME, LEGACY_OAUTH_SCHEME)
+
+        internal const val PREFS_NAME = "gothwad_accounts"
+        internal const val KEY_ACCESS = "access_token"
+        internal const val KEY_REFRESH = "refresh_token"
+        internal const val KEY_EXPIRES_AT = "expires_at"
+        internal const val KEY_VERIFIER = "pkce_verifier"
+        internal const val KEY_STATE = "oauth_state"
+        internal const val KEY_STARTED = "started_at"
 
         /** The real scope set is stored when signing in; kept for readable signing. */
-        const val DEFAULT_SCOPE = "profile email offline_access"
+        internal const val DEFAULT_SCOPE = "profile email offline_access"
     }
 }
 

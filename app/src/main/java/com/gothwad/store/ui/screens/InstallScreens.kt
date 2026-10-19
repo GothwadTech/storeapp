@@ -597,8 +597,8 @@ fun AdbScreen(vm: StoreViewModel, nav: NavController) {
             item { SectionHeader(title = "Commands") }
             item {
                 Column(Modifier.padding(horizontal = Spacing.screenH)) {
-                    CommandBlock("adb install -r gothwadstore.apk")
-                    CommandBlock("adb shell pm install -r /sdcard/Download/gothwadstore.apk")
+                    CommandBlock("adb install -r KiwiStore.apk")
+                    CommandBlock("adb shell pm install -r /sdcard/Download/KiwiStore.apk")
                     CommandBlock("adb shell pm list packages | grep gothwad")
                     CommandBlock("adb uninstall $packageName")
                 }
